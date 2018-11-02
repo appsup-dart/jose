@@ -1,0 +1,17 @@
+name: jose
+description: Javascript Object Signing and Encryption (JOSE) library
+version: 0.1.0
+author: Rik Bellens <rik.bellens@appsup.be>
+homepage: https://github.com/appsup-dart/jose
+
+environment:
+  sdk: '>=2.0.0 <3.0.0'
+
+dependencies:
+  crypto_keys: ^0.1.0
+  resource: ^2.1.5
+  meta: ^1.1.6
+
+dev_dependencies:
+  test: ^1.0.0
+
