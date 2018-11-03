@@ -454,15 +454,15 @@ class JsonWebKeyStore {
     for (var s in _keySets) {
       yield* new Stream.fromIterable(s.keys);
     }
-    if (false) {
-      // TODO trust keys from header?
-      // Keys referenced by the "jku"
-      if (header.jwkSetUrl != null) yield* _keysFromSet(header.jwkSetUrl);
-      // The key referenced by the "x5u"
-      // TODO
-      // The key provided by the "x5c"
-      // TODO
-    }
+/*
+    // TODO trust keys from header?
+    // Keys referenced by the "jku"
+    if (header.jwkSetUrl != null) yield* _keysFromSet(header.jwkSetUrl);
+    // The key referenced by the "x5u"
+    // TODO
+    // The key provided by the "x5c"
+    // TODO
+*/
     // Other applicable keys available to the application
     for (var url in _keySetUrls) {
       yield* _keysFromSet(url);
