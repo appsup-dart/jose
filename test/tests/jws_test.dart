@@ -242,6 +242,6 @@ _doTests(dynamic payload, dynamic key, dynamic encoded) {
     var jws = builder.build();
 
     if (encoded is String) jws.toCompactSerialization();
-    _expectPayload(jws);
+    await _expectPayload(jws);
   });
 }
