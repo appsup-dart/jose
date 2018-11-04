@@ -9,7 +9,6 @@ environment:
 
 dependencies:
   crypto_keys: ^0.1.0
-  resource: ^2.1.5
   meta: ^1.1.6
 
 dev_dependencies:

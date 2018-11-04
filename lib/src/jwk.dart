@@ -5,7 +5,9 @@ import 'package:crypto_keys/crypto_keys.dart';
 import 'util.dart';
 import 'dart:async';
 import 'jose.dart';
-import 'package:resource/resource.dart';
+// temporarily use copy of resource package
+// until issue https://github.com/dart-lang/resource/issues/35 has been fixed
+import 'resource/resource.dart';
 import 'dart:convert' as convert;
 
 /// JSON Web Key (JWK) represents a cryptographic key
