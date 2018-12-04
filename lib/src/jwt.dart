@@ -111,12 +111,16 @@ class JsonWebToken {
   /// Decodes and verifies/decrypts a JWT string from a JWE or JWS compact
   /// serialization
   static Future<JsonWebToken> decodeAndVerify(
-      String serialization, JsonWebKeyStore keyStore) async {
+      String serialization, JsonWebKeyStore keyStore,
+      {List<String> allowedArguments}) async {
     var joseObject = new JoseObject.fromCompactSerialization(serialization);
-    var content = await joseObject.getPayload(keyStore);
+    var content = await joseObject.getPayload(keyStore,
+        allowedAlgorithms: allowedArguments);
     var claims;
     if (content.mediaType == "JWT") {
-      claims = (await decodeAndVerify(content.stringContent, keyStore)).claims;
+      claims = (await decodeAndVerify(content.stringContent, keyStore,
+              allowedArguments: allowedArguments))
+          .claims;
     } else {
       claims = new JsonWebTokenClaims.fromJson(content.jsonContent);
     }
@@ -131,9 +135,11 @@ class JsonWebToken {
   bool get isVerified => _verified;
 
   /// Attempts to verify this JWT
-  Future<bool> verify(JsonWebKeyStore keyStore) async {
+  Future<bool> verify(JsonWebKeyStore keyStore,
+      {List<String> allowedArguments}) async {
     try {
-      await _joseObject.getPayload(keyStore);
+      await _joseObject.getPayload(keyStore,
+          allowedAlgorithms: allowedArguments);
       return _verified = true;
     } catch (e) {
       return _verified = false;

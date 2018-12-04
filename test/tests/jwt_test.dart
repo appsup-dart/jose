@@ -77,9 +77,9 @@ main() {
 
     _doTests(dynamic payload, dynamic encoded, [bool verify = true]) {
       test('decode', () async {
-        var jwt = verify
-            ? await JsonWebToken.decodeAndVerify(encoded, context)
-            : JsonWebToken.unverified(encoded);
+        var jwt = await JsonWebToken.decodeAndVerify(encoded, context,
+            allowedArguments: verify ? null : ["none"]);
+
         expect(jwt.toCompactSerialization(), encoded);
         expect(jwt.claims.toJson(), payload);
       });
