@@ -196,11 +196,22 @@ abstract class JoseObject {
   /// Returns a future that resolves to the payload if the content of this
   /// object can be decrypted and verified. Otherwise the future fails with a
   /// [JoseException]
-  Future<JosePayload> getPayload(JsonWebKeyStore keyStore) async {
+  ///
+  /// This method will fail if none of the signatures or recipients use one of
+  /// the algorithms listed in [allowedAlgorithms] for signing the payload or
+  /// wrapping the key. By default, all algorithms are allowed except `none`.
+  Future<JosePayload> getPayload(JsonWebKeyStore keyStore,
+      {List<String> allowedAlgorithms}) async {
     for (var r in recipients) {
       var header = _headerFor(r);
+      if (allowedAlgorithms != null &&
+          !allowedAlgorithms.contains(header.algorithm)) continue;
+      if (allowedAlgorithms == null && header.algorithm == "none") continue;
       await for (var key in keyStore.findJsonWebKeys(
-          header, this is JsonWebSignature ? "verify" : "unwrapKey")) {
+          header,
+          this is JsonWebSignature
+              ? "verify"
+              : header.algorithm == "dir" ? "decrypt" : "unwrapKey")) {
         try {
           var payload = getPayloadFor(key, header, r);
           if (payload != null)

@@ -75,9 +75,11 @@ main() {
             "W0ITrJReOgo1cq9SbsxYawBgfp_gh6A5603k2-ZQwVK0JKSHuLFkuQ3U"
       }));
 
-    _doTests(dynamic payload, dynamic encoded) {
+    _doTests(dynamic payload, dynamic encoded, [bool verify = true]) {
       test('decode', () async {
-        var jwt = await JsonWebToken.decodeAndVerify(encoded, context);
+        var jwt = verify
+            ? await JsonWebToken.decodeAndVerify(encoded, context)
+            : JsonWebToken.unverified(encoded);
         expect(jwt.toCompactSerialization(), encoded);
         expect(jwt.claims.toJson(), payload);
       });
@@ -108,7 +110,8 @@ main() {
           {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": true},
           "eyJhbGciOiJub25lIn0."
           "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt"
-          "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ.");
+          "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ.",
+          false);
     });
     group('Example Encrypted JWT', () {
       _doTests(

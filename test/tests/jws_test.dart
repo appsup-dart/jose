@@ -100,7 +100,8 @@ main() {
           null,
           "eyJhbGciOiJub25lIn0."
           "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt"
-          "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ.");
+          "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ.",
+          allowedAlgorithms: ["none"]);
     });
     group('Example JWS Using General JWS JSON Serialization', () {
       _doTests(
@@ -196,9 +197,30 @@ main() {
           });
     });
   });
+  group('Special algorithms JWS', () {
+    test('Signing with `none`', () async {
+      var payload = "I am disguised";
+      var builder = new JsonWebSignatureBuilder()..content = payload;
+
+      builder.addRecipient(null, algorithm: "none");
+      var jws = builder.build();
+
+      var keyStore = new JsonWebKeyStore();
+      jws = JsonWebSignature.fromCompactSerialization(
+          jws.toCompactSerialization());
+
+      expect(jws.getPayload(keyStore), throwsException);
+
+      expect(
+          (await jws.getPayload(keyStore, allowedAlgorithms: ["none"]))
+              .stringContent,
+          payload);
+    });
+  });
 }
 
-_doTests(dynamic payload, dynamic key, dynamic encoded) {
+_doTests(dynamic payload, dynamic key, dynamic encoded,
+    {List<String> allowedAlgorithms}) {
   var jws = encoded is String
       ? new JsonWebSignature.fromCompactSerialization(encoded)
       : new JsonWebSignature.fromJson(encoded);
@@ -207,8 +229,9 @@ _doTests(dynamic payload, dynamic key, dynamic encoded) {
       : new JsonWebKeySet.fromKeys(key == null ? [] : [key]);
   var context = new JsonWebKeyStore()..addKeySet(keys);
 
-  _expectPayload(JoseObject jose) async {
-    var content = await jose.getPayload(context);
+  _expectPayload(JoseObject jose, {List<String> allowedAlgorithms}) async {
+    var content =
+        await jose.getPayload(context, allowedAlgorithms: allowedAlgorithms);
     if (payload is String) {
       expect(content.stringContent, payload);
     } else if (payload is Map) {
@@ -219,14 +242,14 @@ _doTests(dynamic payload, dynamic key, dynamic encoded) {
   }
 
   test('decode', () {
-    _expectPayload(jws);
+    _expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
     if (encoded is String)
       expect(jws.toCompactSerialization(), encoded);
     else
       expect(jws.toJson(), encoded);
   });
   test('verify', () async {
-    await _expectPayload(jws);
+    await _expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
   });
   test('create', () async {
     var builder = new JsonWebSignatureBuilder()..content = payload;
@@ -242,6 +265,6 @@ _doTests(dynamic payload, dynamic key, dynamic encoded) {
     var jws = builder.build();
 
     if (encoded is String) jws.toCompactSerialization();
-    await _expectPayload(jws);
+    await _expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
   });
 }

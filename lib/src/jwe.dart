@@ -128,6 +128,9 @@ class JsonWebEncryption extends JoseObject {
     if (additionalAuthenticatedData != null) {
       aad += ".${new String.fromCharCodes(additionalAuthenticatedData)}";
     }
+    if (header.encryptionAlgorithm == "none") {
+      throw new JoseException("Encryption algorithm cannot be `none`");
+    }
     var cek = header.algorithm == "dir"
         ? key
         : key.unwrapKey(recipient.data, algorithm: header.algorithm);
@@ -164,6 +167,9 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
   JsonWebEncryption build() {
     if (encryptionAlgorithm == null) {
       throw new StateError("No encryption algorithm set");
+    }
+    if (encryptionAlgorithm == "none") {
+      throw new StateError("Encryption algorithm cannot be `none`");
     }
     if (recipients.isEmpty) {
       throw new StateError("Need at least one recipient");

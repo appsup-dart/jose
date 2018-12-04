@@ -201,6 +201,23 @@ main() {
           });
     });
   });
+  group('Special algorithms JWE', () {
+    test('Key wrapping with `dir`', () async {
+      var payload = "I am disguised";
+      var builder = new JsonWebEncryptionBuilder()..content = payload;
+
+      var key = new JsonWebKey.generate(builder.encryptionAlgorithm);
+      var keyStore = new JsonWebKeyStore()..addKey(key);
+
+      builder.addRecipient(key, algorithm: "dir");
+      var jwe = builder.build();
+
+      jwe = JsonWebEncryption.fromCompactSerialization(
+          jwe.toCompactSerialization());
+
+      expect((await jwe.getPayload(keyStore)).stringContent, payload);
+    });
+  });
 }
 
 _doTests(dynamic payload, dynamic key, dynamic encoded) {
