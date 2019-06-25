@@ -87,7 +87,7 @@ Future<String> readAsString(Uri uri, Encoding encoding) async {
       var byteList = buffer.buffer.asUint8List(0, buffer.length);
       return new String.fromCharCodes(byteList);
     }
-    return response.transform(encoding.decoder).join();
+    return encoding.decoder.bind(response).join();
   }
   if (uri.scheme == "data") {
     return uri.data.contentAsString(encoding: encoding);
