@@ -19,11 +19,15 @@ class JsonWebKey extends JsonObject {
       : _keyPair = KeyPair.fromJwk(json),
         super.from(json) {
     if (keyType == null) throw ArgumentError.notNull('keyType');
-    if (json.containsKey('x5u') ||
-        json.containsKey('x5c') ||
-        json.containsKey('x5t') ||
-        json.containsKey('x5t#S256')) {
-      throw UnimplementedError('X.509 keys not implemented');
+    // If RSA and we already got the public key by other parameters we can skip
+    // the certificate check
+    if (keyType != 'RSA' || _keyPair.publicKey == null) {
+      if (json.containsKey('x5u') ||
+          json.containsKey('x5c') ||
+          json.containsKey('x5t') ||
+          json.containsKey('x5t#S256')) {
+        throw UnimplementedError('X.509 keys not implemented');
+      }
     }
   }
 
