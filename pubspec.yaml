@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   crypto_keys: ^0.1.0
+  logging: ^0.11.4
   meta: ^1.1.6
   typed_data: ^1.0.0
 

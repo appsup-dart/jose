@@ -2,6 +2,7 @@
 library jose.jwk;
 
 import 'package:crypto_keys/crypto_keys.dart';
+import 'package:logging/logging.dart';
 import 'util.dart';
 import 'dart:async';
 import 'jose.dart';
@@ -428,6 +429,7 @@ class JsonWebKeySet extends JsonObject {
 
 /// A key store to lookup [JsonWebKey]s
 class JsonWebKeyStore {
+  final Logger log = new Logger('JsonWebKeyStore');
   final List<JsonWebKey> _keys = [];
   final List<JsonWebKeySet> _keySets = [];
   final List<Uri> _keySetUrls = [];
@@ -492,7 +494,7 @@ class JsonWebKeyStore {
         set = _addKeySetToCache(
             uri, JsonWebKeySet.fromJson(convert.json.decode(v)));
       } catch (e) {
-        // TODO log
+        log.warning('Could not load keys from $uri', e);
         return;
       }
     }
