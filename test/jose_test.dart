@@ -3,7 +3,7 @@ import 'tests/jws_test.dart' as jws;
 import 'tests/jwe_test.dart' as jwe;
 import 'tests/jwt_test.dart' as jwt;
 
-main() {
+void main() {
   jwk.main();
   jws.main();
   jwe.main();

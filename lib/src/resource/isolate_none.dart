@@ -5,8 +5,8 @@
 import 'dart:async';
 
 Future<Uri> resolveUri(Uri uri) {
-  if (uri.scheme == "package") {
-    throw new UnsupportedError("Unsupported scheme: $uri");
+  if (uri.scheme == 'package') {
+    throw UnsupportedError('Unsupported scheme: $uri');
   }
-  return new Future<Uri>.value(Uri.base.resolveUri(uri));
+  return Future<Uri>.value(Uri.base.resolveUri(uri));
 }

@@ -2,13 +2,13 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async" show Future, Stream;
-import "dart:convert" show Encoding;
+import 'dart:async' show Future, Stream;
+import 'dart:convert' show Encoding;
 
-import "io_none.dart"
-    if (dart.library.html) "io_html.dart"
-    if (dart.library.io) "io_io.dart" as io;
-import "package_loader.dart";
+import 'io_none.dart'
+    if (dart.library.html) 'io_html.dart'
+    if (dart.library.io) 'io_io.dart' as io;
+import 'package_loader.dart';
 
 /// Resource loading strategy.
 ///
@@ -31,7 +31,7 @@ abstract class ResourceLoader {
   /// This loader is automatically used by the [Resource] class
   /// if no other loader is specified.
   static ResourceLoader get defaultLoader =>
-      const PackageLoader(const DefaultLoader());
+      const PackageLoader(DefaultLoader());
 
   /// Reads the file located by [uri] as a stream of bytes.
   Stream<List<int>> openRead(Uri uri);
@@ -61,10 +61,13 @@ abstract class ResourceLoader {
 class DefaultLoader implements ResourceLoader {
   const DefaultLoader();
 
+  @override
   Stream<List<int>> openRead(Uri uri) => io.readAsStream(uri);
 
+  @override
   Future<List<int>> readAsBytes(Uri uri) => io.readAsBytes(uri);
 
+  @override
   Future<String> readAsString(Uri uri, {Encoding encoding}) =>
       io.readAsString(uri, encoding);
 }

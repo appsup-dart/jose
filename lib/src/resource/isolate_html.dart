@@ -5,8 +5,8 @@
 import 'dart:async';
 
 Future<Uri> resolveUri(Uri uri) {
-  if (uri.scheme == "package") {
-    uri = Uri.parse("packages/${uri.path}");
+  if (uri.scheme == 'package') {
+    uri = Uri.parse('packages/${uri.path}');
   }
-  return new Future<Uri>.value(Uri.base.resolveUri(uri));
+  return Future<Uri>.value(Uri.base.resolveUri(uri));
 }

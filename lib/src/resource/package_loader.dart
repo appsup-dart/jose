@@ -2,11 +2,11 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import "dart:async" show Future, Stream;
-import "dart:convert" show Encoding;
+import 'dart:async' show Future, Stream;
+import 'dart:convert' show Encoding;
 
-import "resolve.dart";
-import "resource_loader.dart";
+import 'resolve.dart';
+import 'resource_loader.dart';
 
 /// Implementation of [ResourceLoader] that accepts relative and package: URIs.
 ///
@@ -19,13 +19,16 @@ class PackageLoader implements ResourceLoader {
   final ResourceLoader _loader;
   const PackageLoader(ResourceLoader loader) : _loader = loader;
 
+  @override
   Stream<List<int>> openRead(Uri uri) async* {
     yield* _loader.openRead(await resolveUri(uri));
   }
 
+  @override
   Future<List<int>> readAsBytes(Uri uri) async =>
       _loader.readAsBytes(await resolveUri(uri));
 
+  @override
   Future<String> readAsString(Uri uri, {Encoding encoding}) async =>
       _loader.readAsString(await resolveUri(uri), encoding: encoding);
 }

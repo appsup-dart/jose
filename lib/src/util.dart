@@ -37,12 +37,13 @@ class JsonObject {
       toBase64EncodedString() == other.toBase64EncodedString();
 
   static dynamic _clone(dynamic v) {
-    if (v is Map)
-      return new Map<String, dynamic>.unmodifiable(
-          new Map<String, dynamic>.fromIterables(v.keys, v.values.map(_clone)));
-    if (v is List) return new List.unmodifiable(v.map(_clone));
+    if (v is Map) {
+      return Map<String, dynamic>.unmodifiable(
+          Map<String, dynamic>.fromIterables(v.keys, v.values.map(_clone)));
+    }
+    if (v is List) return List.unmodifiable(v.map(_clone));
     if (v == null || v is num || v is bool || v is String) return v;
-    throw new ArgumentError.value(v, "Not a json value");
+    throw ArgumentError.value(v, 'Not a json value');
   }
 
   /// Returns the bytes representing the encoded JSON
@@ -56,35 +57,35 @@ class JsonObject {
   dynamic operator [](String key) => _json[key];
 
   /// Returns the property [key] as a typed object
-  T getTyped<T>(String key, {T factory(dynamic v)}) {
+  T getTyped<T>(String key, {T Function(dynamic v) factory}) {
     return _typedMap.putIfAbsent(
         key, () => _convert(this[key], factory: factory));
   }
 
   /// Returns the property [key] as a typed list
-  List<T> getTypedList<T>(String key, {T factory(dynamic v)}) {
+  List<T> getTypedList<T>(String key, {T Function(dynamic v) factory}) {
     return _typedMap.putIfAbsent(key, () {
       var v = this[key];
       if (v == null) return null;
       if (v is List) {
-        return new List<T>.unmodifiable(
+        return List<T>.unmodifiable(
             v.map((i) => _convert(i, factory: factory)));
       }
-      return new List<T>.unmodifiable([_convert(v, factory: factory)]);
+      return List<T>.unmodifiable([_convert(v, factory: factory)]);
     });
   }
 
   final Map<String, dynamic> _typedMap = {};
 
-  T _convert<T>(dynamic v, {T factory(dynamic v)}) {
+  T _convert<T>(dynamic v, {T Function(dynamic v) factory}) {
     if (v == null) return null;
     switch (T) {
       case Uri:
         return Uri.parse(v) as T;
       case DateTime:
-        return new DateTime.fromMillisecondsSinceEpoch(v * 1000) as T;
+        return DateTime.fromMillisecondsSinceEpoch(v * 1000) as T;
       case Duration:
-        return new Duration(seconds: v) as T;
+        return Duration(seconds: v) as T;
       case String:
       case num:
       case bool:
@@ -102,10 +103,10 @@ List<int> decodeBase64EncodedBytes(String encodedString) =>
     encodedString == null
         ? null
         : convert.base64Url.decode(encodedString +
-            new List.filled((4 - encodedString.length % 4) % 4, "=").join());
+            List.filled((4 - encodedString.length % 4) % 4, '=').join());
 
 String encodeBase64EncodedBytes(List<int> data) =>
-    data == null ? null : convert.base64Url.encode(data).replaceAll("=", "");
+    data == null ? null : convert.base64Url.encode(data).replaceAll('=', '');
 
 Map<String, dynamic> safeUnion(Iterable<Map<String, dynamic>> items) {
   var out = <String, dynamic>{};
@@ -113,7 +114,7 @@ Map<String, dynamic> safeUnion(Iterable<Map<String, dynamic>> items) {
     if (i == null) continue;
     for (var k in out.keys.toSet().intersection(i.keys.toSet())) {
       if (out[k] != i[k]) {
-        throw new ArgumentError("Dublicate key `$k`");
+        throw ArgumentError('Dublicate key `$k`');
       }
     }
     out.addAll(i);
