@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/jose.dart';
+import 'package:x509/x509.dart';
 
 void main() async {
   await example1();
@@ -7,6 +12,7 @@ void main() async {
   await example4();
   await example5();
   await example6();
+  await example7();
 }
 
 // decode and verify a JWS
@@ -253,4 +259,60 @@ void example6() async {
 
   // output the compact serialization
   print('jwt compact serialization: ${jws.toCompactSerialization()}');
+}
+
+// create a JWT, sign with RS512
+void example7() async {
+  var claims = JsonWebTokenClaims.fromJson({
+    'exp': Duration(hours: 4).inSeconds,
+    'iss': 'alice',
+  });
+
+  // create a builder, decoding the JWT in a JWS, so using a
+  // JsonWebSignatureBuilder
+  var builder = JsonWebSignatureBuilder();
+
+  // set the content
+  builder.jsonContent = claims.toJson();
+
+  // add a key to sign, can only add one for JWT
+  var key = _readPrivateKeyFromFile('example/jwtRS512.key');
+  builder.addRecipient(key, algorithm: 'RS512');
+
+  // build the jws
+  var jws = builder.build();
+
+  // output the compact serialization
+  print('jwt compact serialization: ${jws.toCompactSerialization()}');
+}
+
+JsonWebKey _readPrivateKeyFromFile(String path) {
+  var v = parsePem(File(path).readAsStringSync()).first;
+  var keyPair = (v is PrivateKeyInfo) ? v.keyPair : v as KeyPair;
+  var pKey = keyPair.privateKey as RsaPrivateKey;
+  print(pKey);
+
+  String _bytesToBase64(List<int> bytes) {
+    return base64Url.encode(bytes).replaceAll('=', '');
+  }
+
+  String _intToBase64(BigInt v) {
+    return _bytesToBase64(v
+        .toRadixString(16)
+        .replaceAllMapped(RegExp('[0-9a-f]{2}'), (m) => '${m.group(0)},')
+        .split(',')
+        .where((v) => v.isNotEmpty)
+        .map((v) => int.parse(v, radix: 16))
+        .toList());
+  }
+
+  return JsonWebKey.fromJson({
+    'kty': 'RSA',
+    'n': _intToBase64(pKey.modulus),
+    'd': _intToBase64(pKey.privateExponent),
+    'p': _intToBase64(pKey.firstPrimeFactor),
+    'q': _intToBase64(pKey.secondPrimeFactor),
+    'alg': 'RS512',
+    'kid': 'some_id'
+  });
 }
