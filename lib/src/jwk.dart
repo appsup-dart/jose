@@ -1,14 +1,14 @@
 /// [JSON Web Key](https://tools.ietf.org/html/rfc7517)
 library jose.jwk;
 
-import 'package:crypto_keys/crypto_keys.dart';
-import 'util.dart';
 import 'dart:async';
-import 'jose.dart';
-// temporarily use copy of resource package
-// until issue https://github.com/dart-lang/resource/issues/35 has been fixed
-import 'resource/resource.dart';
 import 'dart:convert' as convert;
+
+import 'package:crypto_keys/crypto_keys.dart';
+
+import 'jose.dart';
+import 'resource/resource.dart';
+import 'util.dart';
 
 /// JSON Web Key (JWK) represents a cryptographic key
 class JsonWebKey extends JsonObject {
@@ -19,10 +19,18 @@ class JsonWebKey extends JsonObject {
       : _keyPair = KeyPair.fromJwk(json),
         super.from(json) {
     if (keyType == null) throw ArgumentError.notNull('keyType');
-    if (json.containsKey('x5u') ||
-        json.containsKey('x5c') ||
-        json.containsKey('x5t') ||
-        json.containsKey('x5t#S256')) {
+    _assertX509Only(json);
+  }
+
+  void _assertX509Only(Map<String, dynamic> json) {
+    final hasX509params = const ['x5u', 'x5c', 'x5t', 'x5t#S256']
+        .any((key) => json.containsKey(key));
+    final hasRSAParams = const ['n', 'e'].any((key) => json.containsKey(key));
+    final hasEllipsisParams =
+        const ['crv', 'x', 'y'].any((key) => json.containsKey(key));
+    final hasSymmetricParams = json.containsKey('k');
+    if (hasX509params &&
+        !(hasRSAParams || hasEllipsisParams || hasSymmetricParams)) {
       throw UnimplementedError('X.509 keys not implemented');
     }
   }

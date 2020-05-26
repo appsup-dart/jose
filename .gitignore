@@ -11,3 +11,5 @@ build/
 doc/api/
 
 jose.iml
+
+.idea
