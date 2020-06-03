@@ -87,7 +87,7 @@ class JsonWebKey extends JsonObject {
   /// * `deriveBits` (derive bits not to be used as a key)
   ///
   /// Other values MAY be used.
-  Set<String> get keyOperations => getTypedList('key_ops')?.toSet();
+  Set<String> get keyOperations => getTypedList<String>('key_ops')?.toSet();
 
   /// The algorithm intended for use with the key.
   String get algorithm => this['alg'];

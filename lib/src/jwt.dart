@@ -29,7 +29,7 @@ class JsonWebTokenClaims extends JsonObject {
   /// value in the audience claim. If the principal processing the claim does
   /// not identify itself with a value in the 'aud' claim when this claim is
   /// present, then the JWT MUST be rejected.
-  List<String> get audience => getTypedList('aud');
+  List<String> get audience => getTypedList<String>('aud');
 
   /// Identifies the expiration time on or after which the JWT MUST NOT be
   /// accepted for processing.
