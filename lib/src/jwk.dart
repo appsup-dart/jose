@@ -31,9 +31,9 @@ class JsonWebKey extends JsonObject {
     'A128CBC-HS256': 256,
     'A192CBC-HS384': 384,
     'A256CBC-HS512': 512,
-    'A128GCM': 256,
-    'A192GCM': 384,
-    'A256GCM': 512
+    'A128GCM': 128,
+    'A192GCM': 192,
+    'A256GCM': 256
   };
 
   /// Generates a random symmetric key suitable for the specified [algorithm]

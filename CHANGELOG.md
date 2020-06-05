@@ -1,3 +1,8 @@
+
+## 0.1.3
+
+- Support RSAES-OAEP
+
 ## 0.1.2
 
 - Add `allowedAlgorithms` argument also in JWT

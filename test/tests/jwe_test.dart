@@ -49,7 +49,7 @@ void main() {
               '5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6ji'
               'SdiwkIr3ajwQzaBtQD_A.'
               'XFBoMYUZodetZdvTiFvSkQ');
-    }, skip: 'OAEP not implemented');
+    });
     group('Example JWE using RSAES-PKCS1-v1_5 and AES_128_CBC_HMAC_SHA_256',
         () {
       _doTests(
@@ -260,7 +260,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
       builder.addRecipient(null, algorithm: 'none');
     } else {
       for (var key in keys.keys) {
-        builder.addRecipient(key);
+        builder.addRecipient(key, algorithm: jwe.commonHeader.algorithm);
       }
     }
 
