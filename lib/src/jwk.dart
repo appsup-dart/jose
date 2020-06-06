@@ -2,6 +2,7 @@
 library jose.jwk;
 
 import 'package:crypto_keys/crypto_keys.dart';
+import 'package:x509/x509.dart' as x509;
 import 'util.dart';
 import 'dart:async';
 import 'jose.dart';
@@ -9,6 +10,7 @@ import 'jose.dart';
 // until issue https://github.com/dart-lang/resource/issues/35 has been fixed
 import 'resource/resource.dart';
 import 'dart:convert' as convert;
+import 'package:asn1lib/asn1lib.dart';
 
 /// JSON Web Key (JWK) represents a cryptographic key
 class JsonWebKey extends JsonObject {
@@ -19,11 +21,12 @@ class JsonWebKey extends JsonObject {
       : _keyPair = KeyPair.fromJwk(json),
         super.from(json) {
     if (keyType == null) throw ArgumentError.notNull('keyType');
-    if (json.containsKey('x5u') ||
-        json.containsKey('x5c') ||
-        json.containsKey('x5t') ||
-        json.containsKey('x5t#S256')) {
-      throw UnimplementedError('X.509 keys not implemented');
+    if (x509CertificateChain != null && x509CertificateChain.isNotEmpty) {
+      var cert = x509CertificateChain.first;
+
+      if (_keyPair.publicKey != cert.publicKey) {
+        throw ArgumentError("The public key in 'x5c' does not match this key.");
+      }
     }
   }
 
@@ -90,23 +93,29 @@ class JsonWebKey extends JsonObject {
   /// during key rollover.
   String get keyId => this['kid'];
 
-/*
-  TODO: implement X.509
-
   /// A resource for an X.509 public key certificate or certificate chain.
-  Uri get x509Url => _json['x5u']==null ? null : Uri.parse(_json['x5u']);
+  Uri get x509Url => this['x5u'] == null ? null : Uri.parse(this['x5u']);
 
   /// A chain of one or more PKIX certificates.
-  dynamic get x509CertificateChain => _json['x5c'];
+  List<x509.X509Certificate> get x509CertificateChain =>
+      (this['x5c'] as List)?.map((v) {
+        var bytes = convert.base64.decode(v);
+        var p = ASN1Parser(bytes);
+        var o = p.nextObject();
+        if (o is! ASN1Sequence) {
+          throw FormatException('Expected SEQUENCE, got ${o.runtimeType}');
+        }
+        var s = o as ASN1Sequence;
+        return x509.X509Certificate.fromAsn1(s);
+      })?.toList();
 
   /// A base64url encoded SHA-1 thumbprint (a.k.a. digest) of the DER encoding
   /// of an X.509 certificate.
-  String get x509CertificateThumbprint => _json['x5t'];
+  String get x509CertificateThumbprint => this['x5t'];
 
   /// A base64url encoded SHA-256 thumbprint (a.k.a. digest) of the DER encoding
   /// of an X.509 certificate.
-  String get x509CertificateSha256Thumbprint => _json['x5t#S256'];
-*/
+  String get x509CertificateSha256Thumbprint => this['x5t#S256'];
 
   /// Compute digital signature or MAC
   List<int> sign(List<int> data, {String algorithm}) {

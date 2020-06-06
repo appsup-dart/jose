@@ -2,6 +2,7 @@
 ## 0.1.3
 
 - Support RSAES-OAEP
+- Allow x509 parameters in JWK
 
 ## 0.1.2
 

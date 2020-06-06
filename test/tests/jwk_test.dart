@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:jose/src/jwk.dart';
 import 'package:test/test.dart';
 
@@ -190,6 +192,10 @@ void main() {
       expect(key.keyType, 'RSA');
 
       expect(key.toJson(), json);
-    }, skip: 'X.509 not implemented');
+
+      json['e'] = base64.encode([0, 0, 0]);
+      expect(() => JsonWebKey.fromJson(json),
+          throwsA(TypeMatcher<ArgumentError>()));
+    });
   });
 }
