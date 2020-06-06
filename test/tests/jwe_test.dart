@@ -215,6 +215,56 @@ void main() {
       expect((await jwe.getPayload(keyStore)).stringContent, payload);
     });
   });
+  group('JWE Examples from jose4j', () {
+    group('Example JWE Using RSAES-OAEP-256 and A128CBC-HS256', () {
+      _doTests(
+          "Well, as of this moment, they're on DOUBLE SECRET PROBATION!",
+          JsonWebKey.fromJson({
+            'kty': 'RSA',
+            'n': '2cQJH1f6yF9DcGa8Cmbnhn4LHLs5L6kNb2rxkrNFZArJLRaKvaC3tMCKZ8Zg'
+                'IpO9bVMPx5UMjJoaf7p9O5BSApVqA2J10fUbdSIomCcDwvGo0eyhty0D'
+                'ILLWTMXzGEVM3BXzuJQoeDkuUCXXcCwA4Msyyd2OHVu-pB2OrGv6fcjH'
+                'wjINty3UoKm08lCvAevBKHsuA-FFwQII9bycvRx5wRqFUjdMAyiOmLYB'
+                'HBaJSi11g3HVexMcb29v14PSlVzdGUMN8oboa-zcIyaPrIiczLqAkSXQ'
+                'NdEFHrjsJHfFeNMfOblLM7icKN_tyWujYeItt4kqUIimPn5dHjwgcQYE7w',
+            'e': 'AQAB',
+            'd': 'dyUz3ItVceX1Tv1WqtZMnKA_0jN5gWMcL7ayf5JISAlCssGfnUre2C10TH0U'
+                'QjbVMIh-nLMnD5KNJw9Qz5MR28oGG932Gq7hm__ZeA34l-OCe4Ddpgwh'
+                'pvVSHOU9MS1RdSUpmPavAcA_X6ikrAHXZSaoHhxzUgrNTpvBYQMfJUv_'
+                '492fStIseQ9rwAMOpCWOiWMZOQm3KJVTLLunXdKf_UxmzmKXYKYZWke3'
+                'AWIzUqnOfqIjfDTMunF4UWU0zKlhcsaQNmYMVrJGajD1bJdy_dbUU3LE'
+                '8sx-bdkUI6oBk-sFtTTVyVdQcetG9kChJ5EnY5R6tt_4_xFG5kxzTo6qaQ',
+            'p': '7yQmgE60SL7QrXpAJhChLgKnXWi6C8tVx1lA8FTpphpLaCtK-HbgBVHC'
+                'prC2CfaM1mxFJZahxgFjC9ehuV8OzMNyFs8kekS82EsQGksi8HJP'
+                'xyR1fU6ATa36ogPG0nNaqm3EDmYyjowhntgBz2OkbFAsTMHTdna-'
+                'pZBRJa9lm5U',
+            'q': '6R4dzo9LwHLO73EMQPQsmwXjVOvAS5W6rgQ-BCtMhec_QosAXIVE'
+                '3AGyfweqZm6rurXCVFykDLwJ30GepLQ8nTlzeV6clx0x70sa'
+                'GGKKVmCsHuVYWwgIRyJTrt4SX29NQDZ_FE52NlO3OhPkj1Ex'
+                'Sk_pGMqGRFd26K8g0jJsXXM',
+            'dp': 'VByn-hs0qB2Ncmb8ZycUOgWu7ljmjz1up1ZKU_3ZzJWVDkej7-6H'
+                '7vcJ-u1OqgRxFv4v9_-aWPWl68VlWbkIkJbx6vniv6qrrXwB'
+                'Zu4klOPwEYBOXsucrzXRYOjpJp5yNl2zRslFYQQC00bwpAxN'
+                'CdfNLRZDlXhAqCUxlYqyt10',
+            'dq': 'MJFbuGtWZvQEdRJicS3uFSY25LxxRc4eJJ8xpIC44rT5Ew4O'
+                'tzf0zrlzzM92Cv1HvhCcOiNK8nRCwkbTnJEIh-EuU70I'
+                'dttYSfilqSruk2x0r8Msk1qrDtbyBF60CToRKC2ycDKg'
+                'olTyuaDnX4yU7lyTvdyD-L0YQwYpmmFy_k0',
+            'qi': 'vy7XCwZ3jyMGik81TIZDAOQKC8FVUc0TG5KVYfti4tgw'
+                'zUqFwtuB8Oc1ctCKRbE7uZUPwZh4OsCTLqIvqBQd'
+                'a_kaxOxo5EF7iXj6yHmZ2s8P_Z_u3JLuh-oAT_6k'
+                'mbLx6CAO0DbtKtxp24Ivc1hDfqSwWORgN1AOrSRC'
+                'mE3nwxg'
+          }),
+          'eyJhbGciOiJSU0EtT0FFUC0yNTYiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.'
+              'fL5IL5cMCjjU9G9_ZjsD2XO0HIwTOwbVwulcZVw31_rx2qTcHzbYhIvrvbcVLTfJzn8xbQ3UEL442ZgZ1PcFYKENYePXiEyvYxPN8dmvj_'
+              'OfLSJDEqR6kvwOb6nghGtxfzdB_VRvFt2eehbCA3gWpiOYHHvSTFdBPGx2KZHQisLz3oZR8EWiZ1woEpHy8a7FoQ2zzuDlZEJQOUrh09b_'
+              'EJxmcE2jL6wmEtgabyxy3VgWg3GqSPUISlJZV9HThuVJezzktJdpntRDnAPUqjc8IwByGpMleIQcPuBUseRRPr_OsroOJ6eTl5DuFCmBOKb-eNNw5v-GEcVYr1w7X9oXoA.'
+              '0frdIwx8P8UAzh1s9_PgOA.'
+              'RAzILH0xfs0yxzML1CzzGExCfE2_wzWKs0FVuXfM8R5H68yTqTbqIqRCp2feAH5GSvluzmztk2_CkGNSjAyoaw.'
+              '4nMUXOgmgWvM-08tIZ-h5w');
+    });
+  });
 }
 
 void _doTests(dynamic payload, dynamic key, dynamic encoded) {

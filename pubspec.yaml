@@ -8,7 +8,7 @@ environment:
   sdk: '>=2.0.0 <3.0.0'
 
 dependencies:
-  crypto_keys: ^0.1.1
+  crypto_keys: ^0.1.2
   meta: ^1.1.6
   typed_data: ^1.0.0
   x509: ^0.1.0
