@@ -28,6 +28,7 @@ This package supports a lot of the algorithms defined in the standards.
 
 * *RSA1_5* RSAES-PKCS1-v1_5
 * *RSA-OAEP* RSAES OAEP using default parameters
+* *RSA-OAEP-256* RSAES OAEP using SHA-256 and MGF1 with SHA-256
 * *A128KW* AES Key Wrap with default initial value using 128-bit key
 * *A192KW* AES Key Wrap with default initial value using 192-bit key
 * *A256KW* AES Key Wrap with default initial value using 256-bit key
