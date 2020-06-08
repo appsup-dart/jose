@@ -5,7 +5,7 @@ author: Rik Bellens <rik.bellens@appsup.be>
 homepage: https://github.com/appsup-dart/jose
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
+  sdk: '>=2.5.0 <3.0.0'
 
 dependencies:
   crypto_keys: ^0.1.2

@@ -2,6 +2,7 @@
 library jose.jwk;
 
 import 'package:crypto_keys/crypto_keys.dart';
+import 'package:jose/src/jwa.dart';
 import 'package:x509/x509.dart' as x509;
 import 'util.dart';
 import 'dart:async';
@@ -30,28 +31,13 @@ class JsonWebKey extends JsonObject {
     }
   }
 
-  static const _keyBitLengthByEncAlg = {
-    'A128CBC-HS256': 256,
-    'A192CBC-HS384': 384,
-    'A256CBC-HS512': 512,
-    'A128GCM': 128,
-    'A192GCM': 192,
-    'A256GCM': 256
-  };
-
-  /// Generates a random symmetric key suitable for the specified [algorithm]
-  factory JsonWebKey.generate(String algorithm) {
-    var bitLength = _keyBitLengthByEncAlg[algorithm];
-    var keyPair = KeyPair.generateSymmetric(bitLength);
-    return JsonWebKey.fromJson({
-      'kty': 'oct',
-      'k': encodeBase64EncodedBytes(
-          (keyPair.publicKey as SymmetricKey).keyValue),
-      'alg': algorithm,
-      'use': 'enc',
-      'keyOperations': ['encrypt', 'decrypt']
-    });
+  /// Generates a random key suitable for the specified [algorithm]
+  factory JsonWebKey.generate(String algorithm, {int keyBitLength}) {
+    var alg = JsonWebAlgorithm.getByName(algorithm);
+    return alg.generateRandomKey(keyBitLength: keyBitLength);
   }
+
+  KeyPair get cryptoKeyPair => _keyPair;
 
   /// The cryptographic algorithm family used with the key, such as `RSA` or
   /// `EC`.
@@ -194,129 +180,9 @@ class JsonWebKey extends JsonObject {
   /// identified by [algorithm]
   bool usableForAlgorithm(String algorithm) {
     if (this.algorithm != null && this.algorithm != algorithm) return false;
-    switch (algorithm) {
-      // Algorithms for JWS
+    var alg = JsonWebAlgorithm.getByName(algorithm);
 
-      /// HMAC using SHA-256
-      case 'HS256':
-
-      /// HMAC using SHA-384
-      case 'HS384':
-
-      /// HMAC using SHA-512
-      case 'HS512':
-        return keyType == 'oct';
-
-      /// RSASSA-PKCS1-v1_5 using SHA-256
-      case 'RS256':
-
-      /// RSASSA-PKCS1-v1_5 using SHA-384
-      case 'RS384':
-
-      /// RSASSA-PKCS1-v1_5 using SHA-512
-      case 'RS512':
-        return keyType == 'RSA';
-
-      /// ECDSA using P-256 and SHA-256
-      case 'ES256':
-
-      /// ECDSA using P-384 and SHA-384
-      case 'ES384':
-
-      /// ECDSA using P-521 and SHA-512
-      case 'ES512':
-        return keyType == 'EC';
-
-      /// RSASSA-PSS using SHA-256 and MGF1 with SHA-256
-      case 'PS256':
-
-      /// RSASSA-PSS using SHA-384 and MGF1 with SHA-384
-      case 'PS384':
-
-      /// RSASSA-PSS using SHA-512 and MGF1 with SHA-512
-      case 'PS512':
-        return null;
-
-      /// No digital signature or MAC
-      case 'none':
-        return null;
-      // Algorithms for JWE
-      /// RSAES-PKCS1-v1_5
-      case 'RSA1_5':
-
-      /// RSAES OAEP using default parameters
-      case 'RSA-OAEP':
-
-      /// RSAES OAEP using SHA-256 and MGF1 with SHA-256
-      case 'RSA-OAEP-256':
-        return keyType == 'RSA';
-
-      /// AES Key Wrap with default initial value using 128-bit key
-      case 'A128KW':
-
-      /// AES Key Wrap with default initial value using 192-bit key
-      case 'A192KW':
-
-      /// AES Key Wrap with default initial value using 256-bit key
-      case 'A256KW':
-        return keyType == 'oct';
-
-      /// Direct use of a shared symmetric key as the CEK
-      case 'dir':
-        return null;
-
-      /// Elliptic Curve Diffie-Hellman Ephemeral Static key agreement using Concat KDF
-      case 'ECDH-ES':
-
-      /// ECDH-ES using Concat KDF and CEK wrapped with 'A128KW'
-      case 'ECDH-ES+A128KW':
-
-      /// ECDH-ES using Concat KDF and CEK wrapped with 'A192KW'
-      case 'ECDH-ES+A192KW':
-
-      /// ECDH-ES using Concat KDF and CEK wrapped with 'A256KW'
-      case 'ECDH-ES+A256KW':
-
-      /// Key wrapping with AES GCM using 128-bit key
-      case 'A128GCMKW':
-
-      /// Key wrapping with AES GCM using 192-bit key
-      case 'A192GCMKW':
-
-      /// Key wrapping with AES GCM using 256-bit key
-      case 'A256GCMKW':
-
-      /// PBES2 with HMAC SHA-256 and 'A128KW' wrapping
-      case 'PBES2-HS256+A128KW':
-
-      /// PBES2 with HMAC SHA-384 and 'A192KW' wrapping
-      case 'PBES2-HS384+A192KW':
-
-      /// PBES2 with HMAC SHA-512 and 'A256KW' wrapping
-      case 'PBES2-HS512+A256KW':
-        return null;
-
-      // Encryption Algorithms for JWE
-      /// AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm
-      case 'A128CBC-HS256':
-
-      /// AES_192_CBC_HMAC_SHA_384 authenticated encryption algorithm
-      case 'A192CBC-HS384':
-
-      /// AES_256_CBC_HMAC_SHA_512 authenticated encryption algorithm
-      case 'A256CBC-HS512':
-
-      /// AES GCM using 128-bit key
-      case 'A128GCM':
-
-      /// AES GCM using 192-bit key
-      case 'A192GCM':
-
-      /// AES GCM using 256-bit key
-      case 'A256GCM':
-        return keyType == 'oct';
-    }
-    return false;
+    return alg.type == keyType;
   }
 
   /// Returns true if this key can be used for the [operation]
@@ -326,20 +192,9 @@ class JsonWebKey extends JsonObject {
   bool usableForOperation(String operation) {
     var ops = keyOperations;
     if (ops != null && !ops.contains(operation)) return false;
-    if (publicKeyUse != null) {
-      switch (operation) {
-        case 'sign':
-        case 'verify':
-          if (publicKeyUse != 'sig') return false;
-          break;
-        case 'encrypt':
-        case 'decrypt':
-        case 'wrapKey':
-        case 'unwrapKey':
-          if (publicKeyUse != 'enc') return false;
-          break;
-      }
-    }
+    var alg = algorithm == null ? null : JsonWebAlgorithm.getByName(algorithm);
+    if (alg != null && alg.use != publicKeyUse) return false;
+
     switch (operation) {
       case 'sign':
       case 'unwrapKey':
@@ -358,53 +213,20 @@ class JsonWebKey extends JsonObject {
   String algorithmForOperation(String operation) {
     if (!usableForOperation(operation)) return null;
     if (algorithm != null) return algorithm;
-    switch (operation) {
-      case 'sign':
-      case 'verify':
-        // TODO: use key length
-        switch (keyType) {
-          case 'oct':
-            return 'HS256';
-          case 'RSA':
-            return 'RS256';
-          case 'EC':
-            return 'ES256';
-        }
-        return null;
-      case 'wrapKey':
-      case 'unwrapKey':
-        // TODO: use key length
-        switch (keyType) {
-          case 'oct':
-            return 'A128KW';
-          case 'RSA':
-            return 'RSA1_5';
-          case 'EC':
-            return null;
-        }
-        return null;
-      case 'encrypt':
-      case 'decrypt':
-        switch (keyType) {
-          case 'oct':
-            return 'A128CBC-HS256';
-          case 'RSA':
-          case 'EC':
-            return null;
-        }
-        return null;
-    }
-    return null;
+
+    return JsonWebAlgorithm.find(operation: operation, keyType: keyType)
+        .firstWhere((element) => true, orElse: () => null)
+        ?.name;
   }
 
   AlgorithmIdentifier _getAlgorithm(String algorithm) {
+    algorithm ??= this['alg'];
     if (this['alg'] != null) {
       if (this['alg'] != algorithm) {
         throw ArgumentError.value(algorithm, 'algorithm',
             "Algorithm should match key algorithm '${this['alg']}'");
       }
     }
-    algorithm ??= this['alg'];
     return algorithm == null
         ? null
         : AlgorithmIdentifier.getByJwaName(algorithm);

@@ -3,6 +3,9 @@
 
 - Support RSAES-OAEP
 - Allow x509 parameters in JWK
+- JsonWebAlgorithm class
+- Generating random non-symmetric keys
+- cryptoKeyPair getter on JsonWebKey returning a `KeyPair` from `crypto_keys` package 
 
 ## 0.1.2
 

@@ -13,6 +13,7 @@ void main() async {
   await example5();
   await example6();
   await example7();
+  await example8();
 }
 
 // decode and verify a JWS
@@ -284,6 +285,21 @@ void example7() async {
 
   // output the compact serialization
   print('jwt compact serialization: ${jws.toCompactSerialization()}');
+}
+
+// generate a key for use with ES256 signing
+void example8() async {
+  var alg = JsonWebAlgorithm.getByName('ES256');
+
+  var key = alg.generateRandomKey();
+  print(JsonEncoder.withIndent(' ').convert(key));
+
+  final hash = utf8.encode('TEST');
+
+  var sig = key.sign(hash);
+  final valid = key.verify(hash, sig);
+
+  print('valid? $valid');
 }
 
 JsonWebKey _readPrivateKeyFromFile(String path) {

@@ -108,6 +108,16 @@ List<int> decodeBase64EncodedBytes(String encodedString) =>
 String encodeBase64EncodedBytes(List<int> data) =>
     data == null ? null : convert.base64Url.encode(data).replaceAll('=', '');
 
+String encodeBigInt(BigInt v) {
+  final b256 = BigInt.from(256);
+  var bytes = <int>[];
+  while (v != BigInt.zero) {
+    bytes.add((v % b256).toInt());
+    v = v ~/ b256;
+  }
+  return convert.base64Url.encode(bytes.reversed.toList());
+}
+
 Map<String, dynamic> safeUnion(Iterable<Map<String, dynamic>> items) {
   var out = <String, dynamic>{};
   for (var i in items) {
