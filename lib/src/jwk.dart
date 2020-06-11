@@ -3,15 +3,17 @@ library jose.jwk;
 
 import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/src/jwa.dart';
+import 'package:meta/meta.dart';
 import 'package:x509/x509.dart' as x509;
 import 'util.dart';
 import 'dart:async';
 import 'jose.dart';
-// temporarily use copy of resource package
-// until issue https://github.com/dart-lang/resource/issues/35 has been fixed
-import 'resource/resource.dart';
 import 'dart:convert' as convert;
 import 'package:asn1lib/asn1lib.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async' as async show runZoned;
+import 'package:http_extensions_cache/http_extensions_cache.dart';
+import 'package:http_extensions/http_extensions.dart';
 
 /// JSON Web Key (JWK) represents a cryptographic key
 class JsonWebKey extends JsonObject {
@@ -193,7 +195,9 @@ class JsonWebKey extends JsonObject {
     var ops = keyOperations;
     if (ops != null && !ops.contains(operation)) return false;
     var alg = algorithm == null ? null : JsonWebAlgorithm.getByName(algorithm);
-    if (alg != null && alg.use != publicKeyUse) return false;
+    if (alg != null && publicKeyUse != null && alg.use != publicKeyUse) {
+      return false;
+    }
 
     switch (operation) {
       case 'sign':
@@ -259,8 +263,6 @@ class JsonWebKeyStore {
   final List<JsonWebKeySet> _keySets = [];
   final List<Uri> _keySetUrls = [];
 
-  final Map<Uri, JsonWebKeySet> _keySetCache = {};
-
   /// Adds a key set to this tore
   void addKeySet(JsonWebKeySet keys) => _keySets.add(keys);
 
@@ -312,22 +314,75 @@ class JsonWebKeyStore {
   }
 
   Stream<JsonWebKey> _keysFromSet(Uri uri) async* {
-    var set = _findKeySetFromCache(uri);
-    if (set == null) {
-      try {
-        var v = await Resource(uri).readAsString();
-        set = _addKeySetToCache(
-            uri, JsonWebKeySet.fromJson(convert.json.decode(v)));
-      } catch (e) {
-        // TODO log
-        return;
-      }
-    }
+    var set = await JsonWebKeySetLoader.current.read(uri);
+    if (set == null) return;
     yield* Stream.fromIterable(set.keys);
   }
+}
 
-  JsonWebKeySet _addKeySetToCache(Uri uri, JsonWebKeySet set) =>
-      _keySetCache[uri] = set;
+/// Used for loading JSON Web Key sets from an url
+///
+/// The default loader will handle urls with `data` and `http(s)` schemes. Http
+/// requests will be cached.
+///
+/// The default behavior can be changed with [runZoned]. This can be useful for
+/// testing purposes or changing the caching behavior.
+///
+/// Example:
+///
+///   JsonWebKeySetLoader.runZoned(() async {
+///     var key = await set.findJsonWebKeys(header, operation).first;
+///   }, loader: DefaultJsonWebKeySetLoader(httpClient: MockClient()));
+///
+abstract class JsonWebKeySetLoader {
+  @visibleForOverriding
+  Future<String> readAsString(Uri uri);
 
-  JsonWebKeySet _findKeySetFromCache(Uri uri) => _keySetCache[uri];
+  Future<JsonWebKeySet> read(Uri uri) async {
+    return JsonWebKeySet.fromJson(convert.json.decode(await readAsString(uri)));
+  }
+
+  static final JsonWebKeySetLoader _global = DefaultJsonWebKeySetLoader();
+
+  static JsonWebKeySetLoader get current {
+    return Zone.current[_jsonWebKeySetLoaderToken] ?? _global;
+  }
+
+  static final _jsonWebKeySetLoaderToken = Object();
+
+  static T runZoned<T>(T Function() body, {JsonWebKeySetLoader loader}) {
+    return async
+        .runZoned(body, zoneValues: {_jsonWebKeySetLoaderToken: loader});
+  }
+}
+
+/// A [JsonWebKeySetLoader] that uses [http.Client] to make http requests.
+class DefaultJsonWebKeySetLoader extends JsonWebKeySetLoader {
+  final http.Client _httpClient;
+
+  /// Creates a [DefaultJsonWebKeySetLoader]
+  ///
+  /// A custom [httpClient] can be used for doing the http requests.
+  DefaultJsonWebKeySetLoader(
+      {http.Client httpClient,
+      Duration cacheExpiry = const Duration(minutes: 5)})
+      : _httpClient =
+            ExtendedClient(inner: httpClient ?? http.Client(), extensions: [
+          if (cacheExpiry != null && cacheExpiry.inMilliseconds > 0)
+            CacheExtension(defaultOptions: CacheOptions(expiry: cacheExpiry)),
+        ]);
+
+  @override
+  Future<String> readAsString(Uri uri) async {
+    switch (uri.scheme) {
+      case 'data':
+        return uri.data.contentAsString();
+        break;
+      case 'https':
+      case 'http':
+        var r = await _httpClient.get(uri);
+        return r.body;
+    }
+    throw UnsupportedError('Uri\'s with scheme ${uri.scheme} not supported');
+  }
 }

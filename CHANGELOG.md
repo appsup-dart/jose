@@ -1,11 +1,13 @@
 
-## 0.1.3
+## 0.2.0
 
 - Support RSAES-OAEP
 - Allow x509 parameters in JWK
 - JsonWebAlgorithm class
 - Generating random non-symmetric keys
-- cryptoKeyPair getter on JsonWebKey returning a `KeyPair` from `crypto_keys` package 
+- cryptoKeyPair getter on JsonWebKey returning a `KeyPair` from `crypto_keys` package
+- **Breaking Change**: loading jwk set from `package` or `file` url no longer supported by default. The new class 
+`JsonWebKeySetLoader` can be used to override this behavior or manage the way jwk sets are loaded from an url. 
 
 ## 0.1.2
 

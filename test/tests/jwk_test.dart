@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:jose/src/jose.dart';
 import 'package:jose/src/jwk.dart';
 import 'package:test/test.dart';
+import 'package:http/testing.dart';
+import 'package:http/http.dart';
 
 void main() {
   group('JWK Examples from RFC7517', () {
@@ -149,6 +152,47 @@ void main() {
         expect(keySet.keys[1], key2);
 
         expect(keySet.toJson(), json);
+      });
+
+      test('Web Key Set from url', () async {
+        var v = {
+          'keys': [
+            {
+              'kty': 'oct',
+              'alg': 'A128KW',
+              'k': 'GawgguFyGrWKav7AX4VKUg',
+              'kid': 'key1'
+            },
+            {
+              'kty': 'oct',
+              'k': 'AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75'
+                  'aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow',
+              'kid': 'HMAC key used in JWS spec Appendix A.1 example'
+            }
+          ]
+        };
+
+        var client = MockClient((request) async {
+          return Response(json.encode(v), 200);
+        });
+
+        var store = JsonWebKeyStore()
+          ..addKeySetUrl(Uri.parse('https://appsup.be/keys.json'));
+
+        await JsonWebKeySetLoader.runZoned(() async {
+          var key = await store
+              .findJsonWebKeys(
+                  JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
+              .first;
+
+          expect(key.keyType, 'oct');
+          expect(key.algorithm, 'A128KW');
+
+          key = await store
+              .findJsonWebKeys(
+                  JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
+              .first;
+        }, loader: DefaultJsonWebKeySetLoader(httpClient: client));
       });
     });
 
