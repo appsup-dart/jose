@@ -342,10 +342,14 @@ abstract class JsonWebKeySetLoader {
     return JsonWebKeySet.fromJson(convert.json.decode(await readAsString(uri)));
   }
 
-  static final JsonWebKeySetLoader _global = DefaultJsonWebKeySetLoader();
+  static JsonWebKeySetLoader _global = DefaultJsonWebKeySetLoader();
 
   static JsonWebKeySetLoader get current {
     return Zone.current[_jsonWebKeySetLoaderToken] ?? _global;
+  }
+
+  static set global(JsonWebKeySetLoader value) {
+    _global = value;
   }
 
   static final _jsonWebKeySetLoaderToken = Object();
