@@ -20,6 +20,7 @@ This package supports a lot of the algorithms defined in the standards.
 * *RS384* RSASSA-PKCS1-v1_5 using SHA-384
 * *RS512* RSASSA-PKCS1-v1_5 using SHA-512
 * *ES256* ECDSA using P-256 and SHA-256
+* *ES256K* ECDSA using P-256K and SHA-256
 * *ES384* ECDSA using P-384 and SHA-384
 * *ES512* ECDSA using P-521 and SHA-512
 * *none* No digital signature or MAC

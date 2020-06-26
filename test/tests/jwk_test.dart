@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/src/jose.dart';
 import 'package:jose/src/jwk.dart';
 import 'package:test/test.dart';
@@ -240,6 +242,69 @@ void main() {
       json['e'] = base64.encode([0, 0, 0]);
       expect(() => JsonWebKey.fromJson(json),
           throwsA(TypeMatcher<ArgumentError>()));
+    });
+  });
+
+  group('JWK from pem files', () {
+    test('JWK from pem PRIVATE RSA KEY', () {
+      var key = JsonWebKey.fromPem(
+        File('test/tests/pem/rsa.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'RSA');
+      expect(key.cryptoKeyPair.publicKey, isA<RsaPublicKey>());
+      expect(key.cryptoKeyPair.privateKey, isA<RsaPrivateKey>());
+    });
+    test('JWK from pem PUBLIC KEY with RSA', () {
+      var key = JsonWebKey.fromPem(
+        File('test/tests/pem/rsa.pub.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'RSA');
+      expect(key.cryptoKeyPair.publicKey, isA<RsaPublicKey>());
+      expect(key.cryptoKeyPair.privateKey, isNull);
+    });
+    test('JWK from pem PRIVATE EC KEY with P-256 curve', () {
+      var key = JsonWebKey.fromPem(
+        File('test/tests/pem/ec256.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'EC');
+      expect(key.cryptoKeyPair.publicKey, isA<EcPublicKey>());
+      expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.p256);
+      expect(key.cryptoKeyPair.privateKey, isA<EcPrivateKey>());
+      expect((key.cryptoKeyPair.privateKey as EcKey).curve, curves.p256);
+    });
+    test('JWK from pem PUBLIC KEY with EC P-256 curve', () {
+      var key = JsonWebKey.fromPem(
+        File('test/tests/pem/ec256.pub.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'EC');
+      expect(key.cryptoKeyPair.publicKey, isA<EcPublicKey>());
+      expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.p256);
+      expect(key.cryptoKeyPair.privateKey, isNull);
+    });
+    test('JWK from pem PRIVATE EC KEY with P-256K curve', () {
+      var key = JsonWebKey.fromPem(
+        File('test/tests/pem/ec256k.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'EC');
+      expect(key.cryptoKeyPair.publicKey, isA<EcPublicKey>());
+      expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.p256k);
+      expect(key.cryptoKeyPair.privateKey, isA<EcPrivateKey>());
+      expect((key.cryptoKeyPair.privateKey as EcKey).curve, curves.p256k);
+    });
+    test('JWK from pem PUBLIC KEY with EC P-256K curve', () {
+      var key = JsonWebKey.fromPem(
+        File('test/tests/pem/ec256k.pub.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'EC');
+      expect(key.cryptoKeyPair.publicKey, isA<EcPublicKey>());
+      expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.p256k);
+      expect(key.cryptoKeyPair.privateKey, isNull);
     });
   });
 }

@@ -1,3 +1,9 @@
+## 0.2.1
+
+- Added JsonWebKey constructors for creating EC and RSA keys
+- Added factory constructor for creating a JsonWebKey from crypto keys
+- Added factory constructor for creating a JsonWebKey from a pem string
+- Support for P-256K curve 
 
 ## 0.2.0
 

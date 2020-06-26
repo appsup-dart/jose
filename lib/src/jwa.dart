@@ -240,12 +240,6 @@ class JsonWebAlgorithm {
         generateCryptoKeyPair(keyBitLength: keyBitLength));
   }
 
-  static final _curvesByName = <String, Identifier>{
-    'P-256': curves.p256,
-    'P-384': curves.p384,
-    'P-521': curves.p521
-  };
-
   @visibleForTesting
   KeyPair generateCryptoKeyPair({int keyBitLength}) {
     switch (type) {
@@ -254,7 +248,7 @@ class JsonWebAlgorithm {
       case 'RSA':
         return KeyPair.generateRsa(bitStrength: _getKeyBitLength(keyBitLength));
       case 'EC':
-        return KeyPair.generateEc(_curvesByName[curve]);
+        return KeyPair.generateEc(curvesByName[curve]);
     }
     throw UnsupportedError('Algorithms of type \'$type\' not supported');
   }

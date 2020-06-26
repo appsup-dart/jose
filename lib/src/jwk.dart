@@ -1,6 +1,8 @@
 /// [JSON Web Key](https://tools.ietf.org/html/rfc7517)
 library jose.jwk;
 
+import 'dart:convert';
+
 import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/src/jwa.dart';
 import 'package:meta/meta.dart';
@@ -31,6 +33,144 @@ class JsonWebKey extends JsonObject {
         throw ArgumentError("The public key in 'x5c' does not match this key.");
       }
     }
+  }
+
+  static String _bytesToBase64(List<int> bytes) {
+    return base64Url.encode(bytes).replaceAll('=', '');
+  }
+
+  static String _intToBase64(BigInt v) {
+    return _bytesToBase64(v
+        .toRadixString(16)
+        .replaceAllMapped(RegExp('[0-9a-f]{2}'), (m) => '${m.group(0)},')
+        .split(',')
+        .where((v) => v.isNotEmpty)
+        .map((v) => int.parse(v, radix: 16))
+        .toList());
+  }
+
+  /// Creates a JsonWebKey from a [PublicKey] and/or [PrivateKey]
+  factory JsonWebKey.fromCryptoKeys(
+      {PublicKey publicKey, PrivateKey privateKey, String keyId}) {
+    if (publicKey == null && privateKey == null) {
+      throw ArgumentError('Either publicKey or privateKey should be non null');
+    }
+    if (privateKey is RsaPrivateKey) {
+      if (publicKey != null && publicKey is! RsaPublicKey) {
+        throw ArgumentError.value(
+            publicKey, 'publicKey', 'should be an RsaPublicKey');
+      }
+      return JsonWebKey.rsa(
+        modulus: privateKey.modulus,
+        exponent: (publicKey as RsaPublicKey)?.exponent,
+        privateExponent: privateKey.privateExponent,
+        firstPrimeFactor: privateKey.firstPrimeFactor,
+        secondPrimeFactor: privateKey.secondPrimeFactor,
+        keyId: keyId,
+      );
+    }
+    String _toCurveName(Identifier curve) {
+      return curvesByName.entries
+          .firstWhere((element) => element.value == curve)
+          .key;
+    }
+
+    if (privateKey is EcPrivateKey) {
+      if (publicKey != null && publicKey is! EcPublicKey) {
+        throw ArgumentError.value(
+            publicKey, 'publicKey', 'should be an EcPublicKey');
+      }
+      return JsonWebKey.ec(
+        curve: _toCurveName(privateKey.curve),
+        privateKey: privateKey.eccPrivateKey,
+        xCoordinate: (publicKey as EcPublicKey)?.xCoordinate,
+        yCoordinate: (publicKey as EcPublicKey)?.yCoordinate,
+        keyId: keyId,
+      );
+    }
+    if (privateKey != null) {
+      throw UnsupportedError(
+          'Private key of type ${privateKey.runtimeType} not supported');
+    }
+    if (publicKey is RsaPublicKey) {
+      return JsonWebKey.rsa(
+        modulus: publicKey?.modulus,
+        exponent: publicKey?.exponent,
+        keyId: keyId,
+      );
+    }
+    if (publicKey is EcPublicKey) {
+      return JsonWebKey.ec(
+          curve: _toCurveName(publicKey.curve),
+          xCoordinate: publicKey.xCoordinate,
+          yCoordinate: publicKey.yCoordinate);
+    }
+    throw UnsupportedError(
+        'Public key of type ${publicKey.runtimeType} not supported');
+  }
+
+  /// Creates a JsonWebKey of type RSA
+  JsonWebKey.rsa({
+    @required BigInt modulus,
+    BigInt exponent,
+    BigInt privateExponent,
+    BigInt firstPrimeFactor,
+    BigInt secondPrimeFactor,
+    String keyId,
+    String algorithm,
+  }) : this.fromJson({
+          'kty': 'RSA',
+          'n': _intToBase64(modulus),
+          if (exponent != null) 'e': _intToBase64(exponent),
+          if (privateExponent != null) 'd': _intToBase64(privateExponent),
+          if (firstPrimeFactor != null) 'p': _intToBase64(firstPrimeFactor),
+          if (secondPrimeFactor != null) 'q': _intToBase64(secondPrimeFactor),
+          if (keyId != null) 'kid': keyId,
+          if (algorithm != null) 'alg': algorithm
+        });
+
+  /// Creates a JsonWebKey of type EC
+  JsonWebKey.ec(
+      {@required String curve,
+      BigInt xCoordinate,
+      BigInt yCoordinate,
+      BigInt privateKey,
+      String keyId,
+      String algorithm})
+      : this.fromJson({
+          'kty': 'EC',
+          'crv': curve,
+          if (xCoordinate != null) 'x': _intToBase64(xCoordinate),
+          if (yCoordinate != null) 'y': _intToBase64(yCoordinate),
+          if (privateKey != null) 'd': _intToBase64(privateKey),
+          if (keyId != null) 'kid': keyId,
+          if (algorithm != null) 'alg': algorithm
+        });
+
+  /// Creates a JsonWebKey of type oct
+  JsonWebKey.symmetric({@required BigInt key, String keyId})
+      : this.fromJson({
+          'kty': 'oct',
+          'k': _intToBase64(key),
+        });
+
+  /// Parses a PEM encoded public or private key
+  factory JsonWebKey.fromPem(String pem, {String keyId}) {
+    var v = x509.parsePem(pem).first;
+
+    if (v is x509.PrivateKeyInfo) {
+      v = (v as x509.PrivateKeyInfo).keyPair;
+    }
+
+    if (v is KeyPair) {
+      return JsonWebKey.fromCryptoKeys(
+          publicKey: v.publicKey, privateKey: v.privateKey, keyId: keyId);
+    }
+    if (v is x509.SubjectPublicKeyInfo) {
+      return JsonWebKey.fromCryptoKeys(
+          publicKey: v.subjectPublicKey, keyId: keyId);
+    }
+    throw UnsupportedError('Cannot create JWK from ${v.runtimeType}');
   }
 
   /// Generates a random key suitable for the specified [algorithm]

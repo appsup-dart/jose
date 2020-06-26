@@ -1,5 +1,7 @@
 import 'dart:convert' as convert;
 
+import 'package:crypto_keys/crypto_keys.dart';
+
 /// Holds an unmodifiable JSON object
 ///
 /// This object implements the equality operator, base64 (de)serialization and
@@ -146,3 +148,10 @@ Map<String, dynamic> commonUnion(Iterable<Map<String, dynamic>> items) {
   }
   return out;
 }
+
+final curvesByName = <String, Identifier>{
+  'P-256': curves.p256,
+  'P-256K': curves.p256k,
+  'P-384': curves.p384,
+  'P-521': curves.p521
+};
