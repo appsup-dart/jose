@@ -63,17 +63,16 @@ class JoseHeader extends JsonObject {
   String get x509CertificateSha256Thumbprint => this['x5t#S256'];
 */
 
-  /// Declares the media type [IANA.MediaTypes](https://www.iana.org/assignments
-  /// /media-types/media-types.xhtml) of the complete [JsonWebSignature] or
-  /// [JsonWebEncryption].
+  /// Declares the media type [IANA.MediaTypes](https://www.iana.org/assignments/media-types/media-types.xhtml)
+  /// of the complete [JsonWebSignature] or [JsonWebEncryption].
   String get type => getTyped('typ');
 
-  /// Declares the media type [IANA.MediaTypes](https://www.iana.org/assignments
-  /// /media-types/media-types.xhtml) the secured content (the payload) of the
-  /// [JsonWebSignature] or [JsonWebEncryption].
+  /// Declares the media type [IANA.MediaTypes](https://www.iana.org/assignments/media-types/media-types.xhtml)
+  /// the secured content (the payload) of the [JsonWebSignature] or
+  /// [JsonWebEncryption].
   String get contentType => getTyped('cty');
 
-  /// Indicates that extensions to this specification and/or [JsonWebAlgoritm]
+  /// Indicates that extensions to this specification and/or [JsonWebAlgorithm]
   /// are being used that MUST be understood and processed.
   List<String> get critical => getTyped('crit');
 
@@ -295,8 +294,8 @@ class JosePayload {
   /// Return the data as json
   dynamic get jsonContent => convert.json.decode(stringContent);
 
-  /// The media type [IANA.MediaTypes](https://www.iana.org/assignments/
-  /// media-types/media-types.xhtml) of the payload.
+  /// The media type [IANA.MediaTypes](https://www.iana.org/assignments/media-types/media-types.xhtml)
+  /// of the payload.
   ///
   /// This is the 'cty' header parameter
   String get mediaType => protectedHeader['cty'];
@@ -344,8 +343,8 @@ abstract class JoseObjectBuilder<T extends JoseObject> {
     _protectedHeaderParameters[key] = value;
   }
 
-  /// The media type [IANA.MediaTypes](https://www.iana.org/assignments/
-  /// media-types/media-types.xhtml) of the payload.
+  /// The media type [IANA.MediaTypes](https://www.iana.org/assignments/media-types/media-types.xhtml)
+  /// of the payload.
   ///
   /// This is the 'cty' header parameter
   String get mediaType => _protectedHeaderParameters['cty'];

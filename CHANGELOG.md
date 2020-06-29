@@ -1,3 +1,8 @@
+
+## 0.2.1+1
+
+- Fix docs
+
 ## 0.2.1
 
 - Added JsonWebKey constructors for creating EC and RSA keys
