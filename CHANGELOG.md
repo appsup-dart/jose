@@ -1,4 +1,7 @@
 
+## 0.2.2
+- Bump `asn1lib` to 0.8.1.
+
 ## 0.2.1+1
 
 - Fix docs
