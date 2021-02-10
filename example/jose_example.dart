@@ -31,7 +31,7 @@ void example1() async {
   var payload = jws.unverifiedPayload;
 
   print('content of jws: ${payload.stringContent}');
-  print('protected parameters: ${payload.protectedHeader.toJson()}');
+  print('protected parameters: ${payload.protectedHeader!.toJson()}');
 
   // create a JsonWebKey for verifying the signature
   var jwk = JsonWebKey.fromJson({

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -37,13 +38,13 @@ void main() {
           ]
         };
 
-        var key1 = JsonWebKey.fromJson(json['keys'][0]);
+        var key1 = JsonWebKey.fromJson(json['keys']![0]);
 
         expect(key1.keyType, 'EC');
         expect(key1.keyId, '1');
         expect(key1.publicKeyUse, 'enc');
 
-        var key2 = JsonWebKey.fromJson(json['keys'][1]);
+        var key2 = JsonWebKey.fromJson(json['keys']![1]);
 
         expect(key2.keyType, 'RSA');
         expect(key2.keyId, '2011-04-29');
@@ -51,8 +52,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys[0], key1);
-        expect(keySet.keys[1], key2);
+        expect(keySet.keys![0], key1);
+        expect(keySet.keys![1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -105,13 +106,13 @@ void main() {
           ]
         };
 
-        var key1 = JsonWebKey.fromJson(json['keys'][0]);
+        var key1 = JsonWebKey.fromJson(json['keys']![0]);
 
         expect(key1.keyType, 'EC');
         expect(key1.keyId, '1');
         expect(key1.publicKeyUse, 'enc');
 
-        var key2 = JsonWebKey.fromJson(json['keys'][1]);
+        var key2 = JsonWebKey.fromJson(json['keys']![1]);
 
         expect(key2.keyType, 'RSA');
         expect(key2.keyId, '2011-04-29');
@@ -119,8 +120,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys[0], key1);
-        expect(keySet.keys[1], key2);
+        expect(keySet.keys![0], key1);
+        expect(keySet.keys![1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -138,20 +139,20 @@ void main() {
           ]
         };
 
-        var key1 = JsonWebKey.fromJson(json['keys'][0]);
+        var key1 = JsonWebKey.fromJson(json['keys']![0]);
 
         expect(key1.keyType, 'oct');
         expect(key1.algorithm, 'A128KW');
 
-        var key2 = JsonWebKey.fromJson(json['keys'][1]);
+        var key2 = JsonWebKey.fromJson(json['keys']![1]);
 
         expect(key2.keyType, 'oct');
         expect(key2.keyId, 'HMAC key used in JWS spec Appendix A.1 example');
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys[0], key1);
-        expect(keySet.keys[1], key2);
+        expect(keySet.keys![0], key1);
+        expect(keySet.keys![1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -182,18 +183,18 @@ void main() {
           ..addKeySetUrl(Uri.parse('https://appsup.be/keys.json'));
 
         await JsonWebKeySetLoader.runZoned(() async {
-          var key = await store
+          var key = await (store
               .findJsonWebKeys(
                   JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
-              .first;
+              .first as FutureOr<JsonWebKey>);
 
           expect(key.keyType, 'oct');
           expect(key.algorithm, 'A128KW');
 
-          key = await store
+          key = await (store
               .findJsonWebKeys(
                   JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
-              .first;
+              .first as FutureOr<JsonWebKey>);
         }, loader: DefaultJsonWebKeySetLoader(httpClient: client));
       });
     });

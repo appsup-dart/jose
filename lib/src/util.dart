@@ -7,15 +7,15 @@ import 'package:crypto_keys/crypto_keys.dart';
 /// This object implements the equality operator, base64 (de)serialization and
 /// convenient methods to get typed properties.
 class JsonObject {
-  final Map<String, dynamic> _json;
-  String _encodedString;
+  final Map<String, dynamic>? _json;
+  String? _encodedString;
 
   JsonObject._(this._json, [this._encodedString]);
 
   /// Constructs a [JsonObject] from a [json] map.
   ///
   /// The [json] map is deep cloned to an unmodifiable copy.
-  JsonObject.from(Map<String, dynamic> json) : this._(_clone(json));
+  JsonObject.from(Map<String, dynamic>? json) : this._(_clone(json));
 
   /// Constructs a [JsonObject] from a [bytes] representation of the json string
   JsonObject.fromBytes(List<int> bytes)
@@ -24,11 +24,11 @@ class JsonObject {
 
   /// Constructs a [JsonObject] from a base64 [encodedString] representation of
   /// the json string
-  JsonObject.decode(String encodedString)
-      : this.fromBytes(decodeBase64EncodedBytes(encodedString));
+  JsonObject.decode(String? encodedString)
+      : this.fromBytes(decodeBase64EncodedBytes(encodedString)!);
 
   /// Returns a JSON representation
-  Map<String, dynamic> toJson() => _json;
+  Map<String, dynamic>? toJson() => _json;
 
   @override
   int get hashCode => toBase64EncodedString().hashCode;
@@ -41,7 +41,7 @@ class JsonObject {
   static dynamic _clone(dynamic v) {
     if (v is Map) {
       return Map<String, dynamic>.unmodifiable(
-          Map<String, dynamic>.fromIterables(v.keys, v.values.map(_clone)));
+          Map<String, dynamic>.fromIterables(v.keys as Iterable<String>, v.values.map(_clone)));
     }
     if (v is List) return List.unmodifiable(v.map(_clone));
     if (v == null || v is num || v is bool || v is String) return v;
@@ -49,23 +49,23 @@ class JsonObject {
   }
 
   /// Returns the bytes representing the encoded JSON
-  List<int> toBytes() => decodeBase64EncodedBytes(toBase64EncodedString());
+  List<int>? toBytes() => decodeBase64EncodedBytes(toBase64EncodedString());
 
   /// Returns the base64 representation
-  String toBase64EncodedString() => _encodedString ??=
+  String? toBase64EncodedString() => _encodedString ??=
       encodeBase64EncodedBytes(convert.utf8.encode(convert.json.encode(_json)));
 
   /// Returns the property [key] as a core dart value
-  dynamic operator [](String key) => _json[key];
+  dynamic operator [](String key) => _json![key];
 
   /// Returns the property [key] as a typed object
-  T getTyped<T>(String key, {T Function(dynamic v) factory}) {
+  T? getTyped<T>(String key, {T Function(dynamic v)? factory}) {
     return _typedMap.putIfAbsent(
         key, () => _convert(this[key], factory: factory));
   }
 
   /// Returns the property [key] as a typed list
-  List<T> getTypedList<T>(String key, {T Function(dynamic v) factory}) {
+  List<T>? getTypedList<T>(String key, {T Function(dynamic v)? factory}) {
     return _typedMap.putIfAbsent(key, () {
       var v = this[key];
       if (v == null) return null;
@@ -79,7 +79,7 @@ class JsonObject {
 
   final Map<String, dynamic> _typedMap = {};
 
-  T _convert<T>(dynamic v, {T Function(dynamic v) factory}) {
+  T? _convert<T>(dynamic v, {T Function(dynamic v)? factory}) {
     if (v == null) return null;
     switch (T) {
       case Uri:
@@ -101,26 +101,26 @@ class JsonObject {
   String toString() => _json.toString();
 }
 
-List<int> decodeBase64EncodedBytes(String encodedString) =>
+List<int>? decodeBase64EncodedBytes(String? encodedString) =>
     encodedString == null
         ? null
         : convert.base64Url.decode(encodedString +
             List.filled((4 - encodedString.length % 4) % 4, '=').join());
 
-String encodeBase64EncodedBytes(List<int> data) =>
+String? encodeBase64EncodedBytes(List<int>? data) =>
     data == null ? null : convert.base64Url.encode(data).replaceAll('=', '');
 
-String encodeBigInt(BigInt v) {
+String encodeBigInt(BigInt? v) {
   final b256 = BigInt.from(256);
   var bytes = <int>[];
   while (v != BigInt.zero) {
-    bytes.add((v % b256).toInt());
+    bytes.add((v! % b256).toInt());
     v = v ~/ b256;
   }
   return convert.base64Url.encode(bytes.reversed.toList());
 }
 
-Map<String, dynamic> safeUnion(Iterable<Map<String, dynamic>> items) {
+Map<String, dynamic> safeUnion(Iterable<Map<String, dynamic>?> items) {
   var out = <String, dynamic>{};
   for (var i in items) {
     if (i == null) continue;

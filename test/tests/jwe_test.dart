@@ -276,7 +276,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
       : JsonWebKeySet.fromKeys(key == null ? [] : [key]);
   var context = JsonWebKeyStore()..addKeySet(keys);
 
-  void _expectPayload(JsonWebEncryption jwe) async {
+  Future<void> _expectPayload(JsonWebEncryption jwe) async {
     var content = await jwe.getPayload(context);
     if (payload is String) {
       expect(content.stringContent, payload);
@@ -303,13 +303,13 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
       ..encryptionAlgorithm = jwe.commonHeader.encryptionAlgorithm
       ..additionalAuthenticatedData = jwe.additionalAuthenticatedData;
 
-    var p = jwe.sharedProtectedHeader.toJson();
+    var p = jwe.sharedProtectedHeader!.toJson()!;
     p.forEach((k, v) => builder.setProtectedHeader(k, v));
     builder.encryptionAlgorithm = jwe.commonHeader.encryptionAlgorithm;
-    if (keys.keys.isEmpty) {
+    if (keys.keys!.isEmpty) {
       builder.addRecipient(null, algorithm: 'none');
     } else {
-      for (var key in keys.keys) {
+      for (var key in keys.keys!) {
         builder.addRecipient(key, algorithm: jwe.commonHeader.algorithm);
       }
     }

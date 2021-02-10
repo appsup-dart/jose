@@ -23,21 +23,21 @@ class JoseHeader extends JsonObject {
   /// Identifies the cryptographic algorithm used to secure a [JsonWebSignature]
   /// or to encrypt or determine the value of a Content Encryption Key with
   /// [JsonWebEncryption].
-  String get algorithm => getTyped('alg');
+  String? get algorithm => getTyped('alg');
 
   /// Refers to a resource for a set of JSON-encoded public keys, one of which
   /// corresponds to the key used to digitally sign the [JsonWebSignature] or
   /// encrypt the [JsonWebEncryption].
-  Uri get jwkSetUrl => getTyped('jku');
+  Uri? get jwkSetUrl => getTyped('jku');
 
   /// The public key that corresponds to the key used to digitally sign the
   /// [JsonWebSignature] or encrypt the [JsonWebEncryption].
-  JsonWebKey get jsonWebKey =>
+  JsonWebKey? get jsonWebKey =>
       getTyped('jwk', factory: (v) => JsonWebKey.fromJson(v));
 
   /// A hint indicating which key was used to secure the [JsonWebSignature] or
   /// encrypt the [JsonWebEncryption].
-  String get keyId => getTyped('kid');
+  String? get keyId => getTyped('kid');
 
 /*
   TODO: implement X.509
@@ -65,27 +65,27 @@ class JoseHeader extends JsonObject {
 
   /// Declares the media type [IANA.MediaTypes](https://www.iana.org/assignments/media-types/media-types.xhtml)
   /// of the complete [JsonWebSignature] or [JsonWebEncryption].
-  String get type => getTyped('typ');
+  String? get type => getTyped('typ');
 
   /// Declares the media type [IANA.MediaTypes](https://www.iana.org/assignments/media-types/media-types.xhtml)
   /// the secured content (the payload) of the [JsonWebSignature] or
   /// [JsonWebEncryption].
-  String get contentType => getTyped('cty');
+  String? get contentType => getTyped('cty');
 
   /// Indicates that extensions to this specification and/or [JsonWebAlgorithm]
   /// are being used that MUST be understood and processed.
-  List<String> get critical => getTyped('crit');
+  List<String>? get critical => getTyped('crit');
 
   /// The content encryption algorithm used to perform authenticated encryption
   /// on the plaintext to produce the ciphertext and the Authentication Tag.
   ///
   /// Only for [JsonWebEncryption] objects
-  String get encryptionAlgorithm => getTyped('enc');
+  String? get encryptionAlgorithm => getTyped('enc');
 
   /// Compression algorithm applied to the plaintext before encryption, if any.
   ///
   /// Only for [JsonWebEncryption] objects
-  String get compressionAlgorithm => getTyped('zip');
+  String? get compressionAlgorithm => getTyped('zip');
 }
 
 /// Base class for [JsonWebSignature] and [JsonWebEncryption].
@@ -94,7 +94,7 @@ abstract class JoseObject {
   ///
   /// In case of a [JsonWebSignature], this is the plain content, in case of a
   /// [JsonWebEncryption], this is the ciphertext.
-  final List<int> data;
+  final List<int>? data;
 
   /// The per-recipient content of this object
   final List<JoseRecipient> recipients;
@@ -103,13 +103,13 @@ abstract class JoseObject {
   /// recipients
   ///
   /// [JsonWebSignature] objects do not have a shared protected header
-  final JsonObject sharedProtectedHeader;
+  final JsonObject? sharedProtectedHeader;
 
   /// Header parameters that are not integrity protected and are shared by all
   /// recipients
   ///
   /// [JsonWebSignature] objects do not have a shared unprotected header
-  final JsonObject sharedUnprotectedHeader;
+  final JsonObject? sharedUnprotectedHeader;
 
   JoseObject(this.data, this.recipients,
       {this.sharedUnprotectedHeader, this.sharedProtectedHeader});
@@ -199,7 +199,7 @@ abstract class JoseObject {
   /// the algorithms listed in [allowedAlgorithms] for signing the payload or
   /// wrapping the key. By default, all algorithms are allowed except `none`.
   Future<JosePayload> getPayload(JsonWebKeyStore keyStore,
-      {List<String> allowedAlgorithms}) async {
+      {List<String>? allowedAlgorithms}) async {
     for (var r in recipients) {
       var header = _headerFor(r);
       if (allowedAlgorithms != null &&
@@ -209,9 +209,11 @@ abstract class JoseObject {
           header,
           this is JsonWebSignature
               ? 'verify'
-              : header.algorithm == 'dir' ? 'decrypt' : 'unwrapKey')) {
+              : header.algorithm == 'dir'
+                  ? 'decrypt'
+                  : 'unwrapKey')) {
         try {
-          var payload = getPayloadFor(key, header, r);
+          var payload = getPayloadFor(key!, header, r);
           if (payload != null) {
             return JosePayload(payload, _protectedHeaderFor(r));
           }
@@ -224,14 +226,14 @@ abstract class JoseObject {
   }
 
   @protected
-  List<int> getPayloadFor(
+  List<int>? getPayloadFor(
       JsonWebKey key, JoseHeader header, JoseRecipient recipient);
 
   JoseHeader _headerFor(JoseRecipient recipient) {
     return JoseHeader.fromJson(safeUnion([
       sharedProtectedHeader?.toJson(),
       sharedUnprotectedHeader?.toJson(),
-      recipient.header?.toJson()
+      recipient.header.toJson()
     ]));
   }
 
@@ -253,12 +255,12 @@ abstract class JoseRecipient {
   /// These Header Parameter values are integrity protected.
   ///
   /// [JsonWebEncryption] objects do not have a per-recipient protected header
-  final JsonObject protectedHeader;
+  final JsonObject? protectedHeader;
 
   /// Per-recipient unprotected header
   ///
   /// These Header Parameter values are not integrity protected.
-  final JsonObject unprotectedHeader;
+  final JsonObject? unprotectedHeader;
 
   /// Per-recipient combined protected and unprotected header
   final JoseHeader header;
@@ -267,7 +269,7 @@ abstract class JoseRecipient {
   ///
   /// For [JsonWebSignature] objects, this is the signature, for
   /// [JsonWebEncryption] objects, this is the encrypted Content Encryption Key
-  final List<int> data;
+  final List<int>? data;
 
   JoseRecipient({this.data, this.protectedHeader, this.unprotectedHeader})
       : header = JoseHeader.fromJson(safeUnion(
@@ -281,15 +283,15 @@ abstract class JoseRecipient {
 /// Contains the data as well as protected header fields
 class JosePayload {
   /// The binary data of the payload
-  final List<int> data;
+  final List<int>? data;
 
   /// The protected header parameters
-  final JsonObject protectedHeader;
+  final JsonObject? protectedHeader;
 
   JosePayload(this.data, [this.protectedHeader]);
 
   /// Returns the data as string
-  String get stringContent => convert.utf8.decode(data);
+  String get stringContent => convert.utf8.decode(data!);
 
   /// Return the data as json
   dynamic get jsonContent => convert.json.decode(stringContent);
@@ -298,7 +300,7 @@ class JosePayload {
   /// of the payload.
   ///
   /// This is the 'cty' header parameter
-  String get mediaType => protectedHeader['cty'];
+  String? get mediaType => protectedHeader!['cty'];
 }
 
 /// Base class for [JsonWebSignatureBuilder] and [JsonWebEncryptionBuilder]
@@ -306,7 +308,7 @@ abstract class JoseObjectBuilder<T extends JoseObject> {
   final Map<String, dynamic> _protectedHeaderParameters = {};
 
   /// The binary payload
-  List<int> data;
+  List<int>? data;
 
   @protected
   final List<Map<String, dynamic>> recipients = []; // TODO
@@ -347,16 +349,16 @@ abstract class JoseObjectBuilder<T extends JoseObject> {
   /// of the payload.
   ///
   /// This is the 'cty' header parameter
-  String get mediaType => _protectedHeaderParameters['cty'];
+  String? get mediaType => _protectedHeaderParameters['cty'];
 
-  set mediaType(String v) => _protectedHeaderParameters['cty'] = v;
+  set mediaType(String? v) => _protectedHeaderParameters['cty'] = v;
 
   /// Returns the protected header parameters as a [JoseHeader] object
   JoseHeader get protectedHeader =>
       JoseHeader.fromJson(_protectedHeaderParameters);
 
   /// Returns the payload and protected headers as a [JosePayload] object
-  JosePayload get payload =>
+  JosePayload? get payload =>
       data == null ? null : JosePayload(data, protectedHeader);
 
   /// Adds a [key] and [algorithm] to sign or encrypt this object
@@ -364,7 +366,7 @@ abstract class JoseObjectBuilder<T extends JoseObject> {
   /// [JsonWebSignature] and [JsonWebEncryption] can have multiple recipients
   /// that use different keys. The compact serialization as a string can only
   /// have one recipient however.
-  void addRecipient(JsonWebKey key, {String algorithm}) {
+  void addRecipient(JsonWebKey? key, {String? algorithm}) {
     recipients.add({'_jwk': key, 'alg': algorithm});
   }
 

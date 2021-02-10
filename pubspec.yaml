@@ -1,22 +1,45 @@
 name: jose
 description: Javascript Object Signing and Encryption (JOSE) library supporting JWE, JWS, JWK and JWT
-version: 0.2.1+1
+version: 1.0.0
 homepage: https://github.com/appsup-dart/jose
 
 environment:
-  sdk: '>=2.5.0 <3.0.0'
+  sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
   crypto_keys: ^0.1.3
   meta: ^1.1.6
   typed_data: ^1.0.0
-  x509: ^0.1.2+1
+  x509: ^1.0.0
   http_extensions_cache: ^0.1.3
   http_extensions: ^0.1.2
-  http: ^0.12.0
-  asn1lib: ^0.6.4
+  http: ^0.13.0
+  asn1lib: ^0.9.0-nullsafety.0
+  collection: ^1.15.0-nullsafety.4
 
 dev_dependencies:
   test: ^1.0.0
   pedantic: ^1.9.0
 
+dependency_overrides:
+  # Pending https://github.com/aloisdeniel/http_extensions/pull/7
+  http_extensions: 
+    git:
+      url: https://github.com/bottlepay/http_extensions.git
+      path: http_extensions
+
+  # Pending https://github.com/aloisdeniel/http_extensions/pull/7
+  http_extensions_cache: 
+    git:
+      url: https://github.com/bottlepay/http_extensions.git
+      path: http_extensions_cache
+
+  # Pending https://github.com/appsup-dart/x509/pull/9
+  x509:
+    git:
+      url: https://github.com/bottlepay/x509.git
+
+  # Pending https://github.com/appsup-dart/crypto_keys/pull/5
+  crypto_keys:
+    git:
+      url: https://github.com/bottlepay/crypto_keys.git

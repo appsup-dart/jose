@@ -1,3 +1,6 @@
+## 1.0.0
+
+- Migrate null safety
 
 ## 0.2.1+1
 
