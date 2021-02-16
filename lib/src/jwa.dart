@@ -154,7 +154,7 @@ class JsonWebAlgorithm {
 
   /// AES Key Wrap with default initial value using 256-bit key
   static const a256kw =
-      JsonWebAlgorithm('A128KW', type: 'oct', use: 'key', minKeyBitLength: 256);
+      JsonWebAlgorithm('A256KW', type: 'oct', use: 'key', minKeyBitLength: 256);
 
   /// AES_128_CBC_HMAC_SHA_256 authenticated encryption algorithm
   static const a128cbc_hs256 = JsonWebAlgorithm('A128CBC-HS256',
