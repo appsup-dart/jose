@@ -306,10 +306,10 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
     var p = jwe.sharedProtectedHeader!.toJson()!;
     p.forEach((k, v) => builder.setProtectedHeader(k, v));
     builder.encryptionAlgorithm = jwe.commonHeader.encryptionAlgorithm;
-    if (keys.keys!.isEmpty) {
+    if (keys.keys.isEmpty) {
       builder.addRecipient(null, algorithm: 'none');
     } else {
-      for (var key in keys.keys!) {
+      for (var key in keys.keys) {
         builder.addRecipient(key, algorithm: jwe.commonHeader.algorithm);
       }
     }

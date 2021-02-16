@@ -257,10 +257,10 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
   test('create', () async {
     var builder = JsonWebSignatureBuilder()..content = payload;
 
-    if (keys.keys!.isEmpty) {
+    if (keys.keys.isEmpty) {
       builder.addRecipient(null, algorithm: 'none');
     } else {
-      for (var key in keys.keys!) {
+      for (var key in keys.keys) {
         builder.addRecipient(key);
       }
     }

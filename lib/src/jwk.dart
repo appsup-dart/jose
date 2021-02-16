@@ -25,7 +25,7 @@ class JsonWebKey extends JsonObject {
   JsonWebKey.fromJson(Map<String, dynamic> json)
       : _keyPair = KeyPair.fromJwk(json),
         super.from(json) {
-    if (keyType == null) throw ArgumentError.notNull('keyType');
+    if (json['kty'] == null) throw ArgumentError.notNull('keyType');
     if (x509CertificateChain != null && x509CertificateChain!.isNotEmpty) {
       var cert = x509CertificateChain!.first;
 
@@ -163,6 +163,7 @@ class JsonWebKey extends JsonObject {
       : this.fromJson({
           'kty': 'oct',
           'k': _intToBase64(key),
+          if (keyId != null) 'kid': keyId,
         });
 
   /// Parses a PEM encoded public or private key
@@ -194,7 +195,7 @@ class JsonWebKey extends JsonObject {
 
   /// The cryptographic algorithm family used with the key, such as `RSA` or
   /// `EC`.
-  String? get keyType => this['kty'];
+  String get keyType => this['kty'];
 
   /// The intended use of the public key.
   ///
@@ -334,7 +335,7 @@ class JsonWebKey extends JsonObject {
 
   /// Returns true if this key can be used with the JSON Web Algorithm
   /// identified by [algorithm]
-  bool usableForAlgorithm(String? algorithm) {
+  bool usableForAlgorithm(String algorithm) {
     if (this.algorithm != null && this.algorithm != algorithm) return false;
     var alg = JsonWebAlgorithm.getByName(algorithm);
 
@@ -400,15 +401,15 @@ class JsonWebKey extends JsonObject {
 /// Represents a set of [JsonWebKey]s
 class JsonWebKeySet extends JsonObject {
   /// An array of JWK values
-  List<JsonWebKey>? get keys =>
-      getTypedList('keys', factory: (v) => JsonWebKey.fromJson(v));
+  List<JsonWebKey> get keys =>
+      getTypedList('keys', factory: (v) => JsonWebKey.fromJson(v)) ?? const [];
 
   /// Constructs a [JsonWebKeySet] from the list of [keys]
   factory JsonWebKeySet.fromKeys(Iterable<JsonWebKey> keys) =>
       JsonWebKeySet.fromJson({'keys': keys.map((v) => v.toJson()).toList()});
 
   /// Constructs a [JsonWebKeySet] from its JSON representation
-  JsonWebKeySet.fromJson(Map<String, dynamic>? json) : super.from(json);
+  JsonWebKeySet.fromJson(Map<String, dynamic> json) : super.from(json);
 }
 
 /// A key store to lookup [JsonWebKey]s
@@ -436,14 +437,14 @@ class JsonWebKeyStore {
     );
   }
 
-  Stream<JsonWebKey?> _allKeys(JoseHeader header) async* {
+  Stream<JsonWebKey> _allKeys(JoseHeader header) async* {
     // The key provided by the 'jwk'
-    if (header.jsonWebKey != null) yield header.jsonWebKey;
+    if (header.jsonWebKey != null) yield header.jsonWebKey!;
     // Other applicable keys available to the application
     yield* Stream.fromIterable(_keys);
 
     for (var s in _keySets) {
-      yield* Stream.fromIterable(s.keys ?? []);
+      yield* Stream.fromIterable(s.keys);
     }
 /*
     // TODO trust keys from header?
@@ -456,7 +457,7 @@ class JsonWebKeyStore {
 */
     // Other applicable keys available to the application
     for (var url in _keySetUrls) {
-      yield* _keysFromSet(url);
+      yield* _keysFromSet(url).where((v) => v != null).cast();
     }
   }
 
@@ -471,14 +472,14 @@ class JsonWebKeyStore {
 
     return key.usableForAlgorithm(
             operation == 'encrypt' || operation == 'decrypt'
-                ? header.encryptionAlgorithm
-                : header.algorithm) &&
+                ? header.encryptionAlgorithm!
+                : header.algorithm!) &&
         key.usableForOperation(operation);
   }
 
   Stream<JsonWebKey?> _keysFromSet(Uri uri) async* {
     var set = await JsonWebKeySetLoader.current.read(uri);
-    yield* Stream.fromIterable(set.keys ?? []);
+    yield* Stream.fromIterable(set.keys);
   }
 }
 

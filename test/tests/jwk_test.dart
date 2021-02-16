@@ -51,8 +51,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys?[0], key1);
-        expect(keySet.keys?[1], key2);
+        expect(keySet.keys[0], key1);
+        expect(keySet.keys[1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -119,8 +119,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys?[0], key1);
-        expect(keySet.keys?[1], key2);
+        expect(keySet.keys[0], key1);
+        expect(keySet.keys[1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -150,8 +150,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys?[0], key1);
-        expect(keySet.keys?[1], key2);
+        expect(keySet.keys[0], key1);
+        expect(keySet.keys[1], key2);
 
         expect(keySet.toJson(), json);
       });
