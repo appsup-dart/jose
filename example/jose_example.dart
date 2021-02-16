@@ -233,7 +233,8 @@ Future<void> example5() async {
 // create a JWT
 Future<void> example6() async {
   var claims = JsonWebTokenClaims.fromJson({
-    'exp': Duration(hours: 4).inSeconds,
+    'exp':
+        DateTime.now().add(Duration(hours: 4)).millisecondsSinceEpoch ~/ 1000,
     'iss': 'alice',
   });
 
@@ -263,7 +264,8 @@ Future<void> example6() async {
 // create a JWT, sign with RS512
 Future<void> example7() async {
   var claims = JsonWebTokenClaims.fromJson({
-    'exp': Duration(hours: 4).inSeconds,
+    'exp':
+        DateTime.now().add(Duration(hours: 4)).millisecondsSinceEpoch ~/ 1000,
     'iss': 'alice',
   });
 
