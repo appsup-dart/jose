@@ -40,8 +40,10 @@ class JsonWebKey extends JsonObject {
   }
 
   static String _intToBase64(BigInt v) {
-    return _bytesToBase64(v
-        .toRadixString(16)
+    var s = v.toRadixString(16);
+    if (s.length % 2 != 0) s = '0$s';
+
+    return _bytesToBase64(s
         .replaceAllMapped(RegExp('[0-9a-f]{2}'), (m) => '${m.group(0)},')
         .split(',')
         .where((v) => v.isNotEmpty)

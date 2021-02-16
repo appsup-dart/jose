@@ -307,4 +307,18 @@ void main() {
       expect(key.cryptoKeyPair.privateKey, isNull);
     });
   });
+
+  group('Issues', () {
+    test(
+        'Issue #16: _intToBase64 bug causing decryption fail when create key using exponent=65537',
+        () {
+      final jwk = JsonWebKey.rsa(
+        modulus: BigInt.parse('12345678'),
+        exponent: BigInt.parse('65537'),
+      );
+      var publicKey = jwk.cryptoKeyPair.publicKey as RsaPublicKey;
+      expect(publicKey.modulus, BigInt.parse('12345678'));
+      expect(publicKey.exponent, BigInt.parse('65537'));
+    });
+  });
 }
