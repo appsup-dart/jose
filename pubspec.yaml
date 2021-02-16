@@ -11,8 +11,6 @@ dependencies:
   meta: ^1.1.6
   typed_data: ^1.0.0
   x509: ^0.2.0-nullsafety.2
-  http_extensions_cache: ^0.1.3
-  http_extensions: ^0.1.2
   http: ^0.13.0
   asn1lib: ^0.9.0-nullsafety.0
   collection: ^1.15.0-nullsafety.4
@@ -20,19 +18,5 @@ dependencies:
 dev_dependencies:
   test: ^1.0.0
   pedantic: ^1.9.0
-
-dependency_overrides:
-  # Pending https://github.com/aloisdeniel/http_extensions/pull/7
-  http_extensions: 
-    git:
-      url: https://github.com/bottlepay/http_extensions.git
-      path: http_extensions
-
-  # Pending https://github.com/aloisdeniel/http_extensions/pull/7
-  http_extensions_cache: 
-    git:
-      url: https://github.com/bottlepay/http_extensions.git
-      path: http_extensions_cache
-
 
 

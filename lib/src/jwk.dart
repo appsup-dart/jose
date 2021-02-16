@@ -16,8 +16,6 @@ import 'dart:convert' as convert;
 import 'package:asn1lib/asn1lib.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async' as async show runZoned;
-import 'package:http_extensions_cache/http_extensions_cache.dart';
-import 'package:http_extensions/http_extensions.dart';
 
 /// JSON Web Key (JWK) represents a cryptographic key
 class JsonWebKey extends JsonObject {
@@ -528,32 +526,31 @@ abstract class JsonWebKeySetLoader {
 class DefaultJsonWebKeySetLoader extends JsonWebKeySetLoader {
   final http.Client _httpClient;
 
+  final Map<Uri, MapEntry<DateTime, String>> _cache = {};
+  final Duration _cacheExpiry;
+
   /// Creates a [DefaultJsonWebKeySetLoader]
   ///
   /// A custom [httpClient] can be used for doing the http requests.
   DefaultJsonWebKeySetLoader({
     http.Client? httpClient,
     Duration cacheExpiry = const Duration(minutes: 5),
-  }) : _httpClient = ExtendedClient(
-          inner: httpClient as http.BaseClient? ??
-              http.Client() as http.BaseClient,
-          extensions: [
-            if (cacheExpiry.inMilliseconds > 0)
-              CacheExtension(
-                defaultOptions: CacheOptions(expiry: cacheExpiry),
-              ),
-          ],
-        );
+  })  : _httpClient = httpClient ?? http.Client(),
+        _cacheExpiry = cacheExpiry;
 
   @override
   Future<String> readAsString(Uri uri) async {
     switch (uri.scheme) {
       case 'data':
         return uri.data!.contentAsString();
-        break;
       case 'https':
       case 'http':
+        var v = _cache[uri];
+        if (v != null && v.key.isAfter(DateTime.now())) {
+          return v.value;
+        }
         var r = await _httpClient.get(uri);
+        _cache[uri] = MapEntry(DateTime.now().add(_cacheExpiry), r.body);
         return r.body;
     }
     throw UnsupportedError('Uri\'s with scheme ${uri.scheme} not supported');
