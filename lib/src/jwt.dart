@@ -65,14 +65,12 @@ class JsonWebTokenClaims extends JsonObject {
       {Duration expiryTolerance = const Duration(),
       Uri? issuer,
       String? clientId}) sync* {
-    if (expiryTolerance != null) {
-      final now = DateTime.now();
-      final diff = now.difference(expiry!);
-      if (diff > expiryTolerance) {
-        yield JoseException(
-            'JWT expired. Expiry ($expiry) is more than tolerance '
-            '(${expiryTolerance}) before now ($now)');
-      }
+    final now = DateTime.now();
+    final diff = now.difference(expiry!);
+    if (diff > expiryTolerance) {
+      yield JoseException(
+          'JWT expired. Expiry ($expiry) is more than tolerance '
+          '(${expiryTolerance}) before now ($now)');
     }
     if (issuer != null && this.issuer != issuer) {
       yield JoseException('Issuer does not match. Expected '

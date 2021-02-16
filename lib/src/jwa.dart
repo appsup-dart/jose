@@ -37,7 +37,7 @@ class JsonWebAlgorithm {
   static JsonWebAlgorithm getByName(String? name) {
     return allAlgorithms.firstWhere((element) => element.name == name,
         orElse: (() =>
-            throw UnsupportedError('Algorithm \'$name\' not supported.')) as JsonWebAlgorithm Function()?);
+            throw UnsupportedError('Algorithm \'$name\' not supported.')));
   }
 
   static Iterable<JsonWebAlgorithm> find(

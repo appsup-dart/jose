@@ -190,10 +190,10 @@ class JsonWebSignatureBuilder extends JoseObjectBuilder<JsonWebSignature> {
     var _signatures = recipients.map((r) {
       var key = r['_jwk'];
       var algorithm = r['alg'];
-      return _JwsRecipient._sign(payload.data!, payload.protectedHeader!, key,
+      return _JwsRecipient._sign(payload.data, payload.protectedHeader!, key,
           algorithm: algorithm, protectAll: recipients.length == 1);
     }).toList();
 
-    return JsonWebSignature._(payload.data!, _signatures);
+    return JsonWebSignature._(payload.data, _signatures);
   }
 }

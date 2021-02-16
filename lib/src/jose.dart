@@ -301,7 +301,7 @@ abstract class JoseRecipient {
 /// Contains the data as well as protected header fields
 class JosePayload {
   /// The binary data of the payload
-  final List<int>? data;
+  final List<int> data;
 
   /// The protected header parameters
   final JsonObject? protectedHeader;
@@ -309,7 +309,7 @@ class JosePayload {
   JosePayload(this.data, [this.protectedHeader]);
 
   /// Returns the data as string
-  String get stringContent => convert.utf8.decode(data!);
+  String get stringContent => convert.utf8.decode(data);
 
   /// Return the data as json
   dynamic get jsonContent => convert.json.decode(stringContent);
@@ -377,7 +377,7 @@ abstract class JoseObjectBuilder<T extends JoseObject> {
 
   /// Returns the payload and protected headers as a [JosePayload] object
   JosePayload? get payload =>
-      data == null ? null : JosePayload(data, protectedHeader);
+      data == null ? null : JosePayload(data!, protectedHeader);
 
   /// Adds a [key] and [algorithm] to sign or encrypt this object
   ///
@@ -398,7 +398,6 @@ class JoseException implements Exception {
 
   @override
   String toString() {
-    if (message == null) return 'JoseException';
     return 'JoseException: $message';
   }
 }

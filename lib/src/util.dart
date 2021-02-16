@@ -139,7 +139,6 @@ Map<String, dynamic> commonUnion(Iterable<Map<String, dynamic>> items) {
   if (items.isEmpty) return {};
   var out = <String, dynamic>{}..addAll(items.first);
   for (var i in items) {
-    if (i == null) out.clear();
     for (var k in out.keys.toList()) {
       if (out[k] != i[k]) {
         out.remove(k);
