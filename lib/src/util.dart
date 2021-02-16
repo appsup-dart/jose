@@ -41,7 +41,8 @@ class JsonObject {
   static dynamic _clone(dynamic v) {
     if (v is Map) {
       return Map<String, dynamic>.unmodifiable(
-          Map<String, dynamic>.fromIterables(v.keys as Iterable<String>, v.values.map(_clone)));
+          Map<String, dynamic>.fromIterables(
+              v.keys as Iterable<String>, v.values.map(_clone)));
     }
     if (v is List) return List.unmodifiable(v.map(_clone));
     if (v == null || v is num || v is bool || v is String) return v;
@@ -69,10 +70,12 @@ class JsonObject {
     return _typedMap.putIfAbsent(key, () {
       var v = this[key];
       if (v == null) return null;
+
       if (v is List) {
         return List<T>.unmodifiable(
             v.map((i) => _convert(i, factory: factory)));
       }
+
       return List<T>.unmodifiable([_convert(v, factory: factory)]);
     });
   }

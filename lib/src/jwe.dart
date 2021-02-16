@@ -122,8 +122,15 @@ class JsonWebEncryption extends JoseObject {
   }
 
   @override
-  List<int> getPayloadFor(
-      JsonWebKey key, JoseHeader header, JoseRecipient recipient) {
+  List<int>? getPayloadFor(
+    JsonWebKey? key,
+    JoseHeader header,
+    JoseRecipient recipient,
+  ) {
+    if (key == null) {
+      return null;
+    }
+
     var aad = sharedProtectedHeader?.toBase64EncodedString() ?? '';
     if (additionalAuthenticatedData != null) {
       aad += '.${String.fromCharCodes(additionalAuthenticatedData!)}';

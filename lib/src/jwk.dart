@@ -52,18 +52,23 @@ class JsonWebKey extends JsonObject {
   }
 
   /// Creates a JsonWebKey from a [PublicKey] and/or [PrivateKey]
-  factory JsonWebKey.fromCryptoKeys(
-      {PublicKey? publicKey, PrivateKey? privateKey, String? keyId}) {
+  factory JsonWebKey.fromCryptoKeys({
+    PublicKey? publicKey,
+    PrivateKey? privateKey,
+    String? keyId,
+  }) {
     if (publicKey == null && privateKey == null) {
       throw ArgumentError('Either publicKey or privateKey should be non null');
     }
+
     if (privateKey is RsaPrivateKey) {
       if (publicKey != null && publicKey is! RsaPublicKey) {
         throw ArgumentError.value(
             publicKey, 'publicKey', 'should be an RsaPublicKey');
       }
+
       return JsonWebKey.rsa(
-        modulus: privateKey.modulus!,
+        modulus: privateKey.modulus,
         exponent: (publicKey as RsaPublicKey?)?.exponent,
         privateExponent: privateKey.privateExponent,
         firstPrimeFactor: privateKey.firstPrimeFactor,
@@ -71,6 +76,7 @@ class JsonWebKey extends JsonObject {
         keyId: keyId,
       );
     }
+
     String _toCurveName(Identifier? curve) {
       return curvesByName.entries
           .firstWhere((element) => element.value == curve)
@@ -82,6 +88,7 @@ class JsonWebKey extends JsonObject {
         throw ArgumentError.value(
             publicKey, 'publicKey', 'should be an EcPublicKey');
       }
+
       return JsonWebKey.ec(
         curve: _toCurveName(privateKey.curve),
         privateKey: privateKey.eccPrivateKey,
@@ -90,23 +97,27 @@ class JsonWebKey extends JsonObject {
         keyId: keyId,
       );
     }
+
     if (privateKey != null) {
       throw UnsupportedError(
           'Private key of type ${privateKey.runtimeType} not supported');
     }
+
     if (publicKey is RsaPublicKey) {
       return JsonWebKey.rsa(
-        modulus: publicKey.modulus!,
+        modulus: publicKey.modulus,
         exponent: publicKey.exponent,
         keyId: keyId,
       );
     }
+
     if (publicKey is EcPublicKey) {
       return JsonWebKey.ec(
           curve: _toCurveName(publicKey.curve),
           xCoordinate: publicKey.xCoordinate,
           yCoordinate: publicKey.yCoordinate);
     }
+
     throw UnsupportedError(
         'Public key of type ${publicKey.runtimeType} not supported');
   }
@@ -238,7 +249,7 @@ class JsonWebKey extends JsonObject {
         }
         var s = o;
         return x509.X509Certificate.fromAsn1(s);
-      })?.toList();
+      }).toList();
 
   /// A base64url encoded SHA-1 thumbprint (a.k.a. digest) of the DER encoding
   /// of an X.509 certificate.
@@ -422,17 +433,19 @@ class JsonWebKeyStore {
   /// See also [https://tools.ietf.org/html/rfc7515#appendix-D]
   Stream<JsonWebKey?> findJsonWebKeys(JoseHeader header, String operation) {
     if (header.algorithm == 'none') return Stream.fromIterable([null]);
-    return _allKeys(header)
-        .where((key) => _isValidKeyFor(key, header, operation));
+    return _allKeys(header).where(
+      (key) => _isValidKeyFor(key, header, operation),
+    );
   }
 
-  Stream<JsonWebKey> _allKeys(JoseHeader header) async* {
+  Stream<JsonWebKey?> _allKeys(JoseHeader header) async* {
     // The key provided by the 'jwk'
-    if (header.jsonWebKey != null) yield header.jsonWebKey!;
+    if (header.jsonWebKey != null) yield header.jsonWebKey;
     // Other applicable keys available to the application
     yield* Stream.fromIterable(_keys);
+
     for (var s in _keySets) {
-      yield* Stream.fromIterable(s.keys!);
+      yield* Stream.fromIterable(s.keys ?? []);
     }
 /*
     // TODO trust keys from header?
@@ -449,8 +462,15 @@ class JsonWebKeyStore {
     }
   }
 
-  bool _isValidKeyFor(JsonWebKey key, JoseHeader header, String operation) {
-    if (header.keyId != key.keyId) return false;
+  bool _isValidKeyFor(JsonWebKey? key, JoseHeader header, String operation) {
+    if (key == null) {
+      return false;
+    }
+
+    if (header.keyId != key.keyId) {
+      return false;
+    }
+
     return key.usableForAlgorithm(
             operation == 'encrypt' || operation == 'decrypt'
                 ? header.encryptionAlgorithm
@@ -458,10 +478,9 @@ class JsonWebKeyStore {
         key.usableForOperation(operation);
   }
 
-  Stream<JsonWebKey> _keysFromSet(Uri uri) async* {
+  Stream<JsonWebKey?> _keysFromSet(Uri uri) async* {
     var set = await JsonWebKeySetLoader.current.read(uri);
-    if (set == null) return;
-    yield* Stream.fromIterable(set.keys!);
+    yield* Stream.fromIterable(set.keys ?? []);
   }
 }
 
@@ -512,17 +531,19 @@ class DefaultJsonWebKeySetLoader extends JsonWebKeySetLoader {
   /// Creates a [DefaultJsonWebKeySetLoader]
   ///
   /// A custom [httpClient] can be used for doing the http requests.
-  DefaultJsonWebKeySetLoader(
-      {http.Client? httpClient,
-      Duration cacheExpiry = const Duration(minutes: 5)})
-      : _httpClient = ExtendedClient(
-            inner: httpClient as http.BaseClient? ??
-                http.Client() as http.BaseClient,
-            extensions: [
-              if (cacheExpiry.inMilliseconds > 0)
-                CacheExtension(
-                    defaultOptions: CacheOptions(expiry: cacheExpiry)),
-            ]);
+  DefaultJsonWebKeySetLoader({
+    http.Client? httpClient,
+    Duration cacheExpiry = const Duration(minutes: 5),
+  }) : _httpClient = ExtendedClient(
+          inner: httpClient as http.BaseClient? ??
+              http.Client() as http.BaseClient,
+          extensions: [
+            if (cacheExpiry.inMilliseconds > 0)
+              CacheExtension(
+                defaultOptions: CacheOptions(expiry: cacheExpiry),
+              ),
+          ],
+        );
 
   @override
   Future<String> readAsString(Uri uri) async {

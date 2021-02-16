@@ -1,13 +1,12 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto_keys/crypto_keys.dart';
+import 'package:http/http.dart';
+import 'package:http/testing.dart';
 import 'package:jose/src/jose.dart';
 import 'package:jose/src/jwk.dart';
 import 'package:test/test.dart';
-import 'package:http/testing.dart';
-import 'package:http/http.dart';
 
 void main() {
   group('JWK Examples from RFC7517', () {
@@ -52,8 +51,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys![0], key1);
-        expect(keySet.keys![1], key2);
+        expect(keySet.keys?[0], key1);
+        expect(keySet.keys?[1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -120,8 +119,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys![0], key1);
-        expect(keySet.keys![1], key2);
+        expect(keySet.keys?[0], key1);
+        expect(keySet.keys?[1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -151,8 +150,8 @@ void main() {
 
         var keySet = JsonWebKeySet.fromJson(json);
 
-        expect(keySet.keys![0], key1);
-        expect(keySet.keys![1], key2);
+        expect(keySet.keys?[0], key1);
+        expect(keySet.keys?[1], key2);
 
         expect(keySet.toJson(), json);
       });
@@ -183,18 +182,18 @@ void main() {
           ..addKeySetUrl(Uri.parse('https://appsup.be/keys.json'));
 
         await JsonWebKeySetLoader.runZoned(() async {
-          var key = await (store
+          var key = await store
               .findJsonWebKeys(
                   JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
-              .first as FutureOr<JsonWebKey>);
+              .first;
 
-          expect(key.keyType, 'oct');
-          expect(key.algorithm, 'A128KW');
+          expect(key?.keyType, 'oct');
+          expect(key?.algorithm, 'A128KW');
 
-          key = await (store
+          key = await store
               .findJsonWebKeys(
                   JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
-              .first as FutureOr<JsonWebKey>);
+              .first;
         }, loader: DefaultJsonWebKeySetLoader(httpClient: client));
       });
     });

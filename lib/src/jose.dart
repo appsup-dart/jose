@@ -198,22 +198,33 @@ abstract class JoseObject {
   /// This method will fail if none of the signatures or recipients use one of
   /// the algorithms listed in [allowedAlgorithms] for signing the payload or
   /// wrapping the key. By default, all algorithms are allowed except `none`.
-  Future<JosePayload> getPayload(JsonWebKeyStore keyStore,
-      {List<String>? allowedAlgorithms}) async {
+  Future<JosePayload> getPayload(
+    JsonWebKeyStore keyStore, {
+    List<String>? allowedAlgorithms,
+  }) async {
     for (var r in recipients) {
       var header = _headerFor(r);
+
       if (allowedAlgorithms != null &&
-          !allowedAlgorithms.contains(header.algorithm)) continue;
-      if (allowedAlgorithms == null && header.algorithm == 'none') continue;
+          !allowedAlgorithms.contains(header.algorithm)) {
+        continue;
+      }
+
+      if (allowedAlgorithms == null && header.algorithm == 'none') {
+        continue;
+      }
+
       await for (var key in keyStore.findJsonWebKeys(
-          header,
-          this is JsonWebSignature
-              ? 'verify'
-              : header.algorithm == 'dir'
-                  ? 'decrypt'
-                  : 'unwrapKey')) {
+        header,
+        this is JsonWebSignature
+            ? 'verify'
+            : header.algorithm == 'dir'
+                ? 'decrypt'
+                : 'unwrapKey',
+      )) {
         try {
-          var payload = getPayloadFor(key!, header, r);
+          var payload = getPayloadFor(key, header, r);
+
           if (payload != null) {
             return JosePayload(payload, _protectedHeaderFor(r));
           }
@@ -222,12 +233,16 @@ abstract class JoseObject {
         }
       }
     }
+
     throw JoseException('Could not decrypt/verify payload');
   }
 
   @protected
   List<int>? getPayloadFor(
-      JsonWebKey key, JoseHeader header, JoseRecipient recipient);
+    JsonWebKey? key,
+    JoseHeader header,
+    JoseRecipient recipient,
+  );
 
   JoseHeader _headerFor(JoseRecipient recipient) {
     return JoseHeader.fromJson(safeUnion([
