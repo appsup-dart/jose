@@ -24,24 +24,24 @@ class JsonWebAlgorithm {
   final String use;
 
   /// The minimum bit length of the key
-  final int minKeyBitLength;
+  final int? minKeyBitLength;
 
-  final String curve;
+  final String? curve;
 
   const JsonWebAlgorithm(this.name,
-      {@required this.type,
-      @required this.use,
+      {required this.type,
+      required this.use,
       this.minKeyBitLength,
       this.curve});
 
-  static JsonWebAlgorithm getByName(String name) {
+  static JsonWebAlgorithm getByName(String? name) {
     return allAlgorithms.firstWhere((element) => element.name == name,
-        orElse: () =>
-            throw UnsupportedError('Algorithm \'$name\' not supported.'));
+        orElse: (() =>
+            throw UnsupportedError('Algorithm \'$name\' not supported.')));
   }
 
   static Iterable<JsonWebAlgorithm> find(
-      {String operation, String keyType}) sync* {
+      {String? operation, String? keyType}) sync* {
     for (var a in allAlgorithms) {
       if (operation != null) {
         if (!a.keyOperations.contains(operation)) continue;
@@ -235,27 +235,27 @@ class JsonWebAlgorithm {
     });
   }
 
-  JsonWebKey generateRandomKey({int keyBitLength}) {
+  JsonWebKey generateRandomKey({int? keyBitLength}) {
     return jwkFromCryptoKeyPair(
         generateCryptoKeyPair(keyBitLength: keyBitLength));
   }
 
   @visibleForTesting
-  KeyPair generateCryptoKeyPair({int keyBitLength}) {
+  KeyPair generateCryptoKeyPair({int? keyBitLength}) {
     switch (type) {
       case 'oct':
         return KeyPair.generateSymmetric(_getKeyBitLength(keyBitLength));
       case 'RSA':
         return KeyPair.generateRsa(bitStrength: _getKeyBitLength(keyBitLength));
       case 'EC':
-        return KeyPair.generateEc(curvesByName[curve]);
+        return KeyPair.generateEc(curvesByName[curve!]!);
     }
     throw UnsupportedError('Algorithms of type \'$type\' not supported');
   }
 
-  int _getKeyBitLength(int keyBitLength) {
+  int _getKeyBitLength(int? keyBitLength) {
     keyBitLength ??= minKeyBitLength;
-    if (keyBitLength < minKeyBitLength) {
+    if (keyBitLength! < minKeyBitLength!) {
       throw ArgumentError.value(keyBitLength, 'keyLength',
           'Minimum key length for algorithm $name is $minKeyBitLength');
     }

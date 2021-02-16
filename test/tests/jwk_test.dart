@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto_keys/crypto_keys.dart';
+import 'package:http/http.dart';
+import 'package:http/testing.dart';
 import 'package:jose/src/jose.dart';
 import 'package:jose/src/jwk.dart';
 import 'package:test/test.dart';
-import 'package:http/testing.dart';
-import 'package:http/http.dart';
 
 void main() {
   group('JWK Examples from RFC7517', () {
@@ -37,13 +37,13 @@ void main() {
           ]
         };
 
-        var key1 = JsonWebKey.fromJson(json['keys'][0]);
+        var key1 = JsonWebKey.fromJson(json['keys']![0]);
 
         expect(key1.keyType, 'EC');
         expect(key1.keyId, '1');
         expect(key1.publicKeyUse, 'enc');
 
-        var key2 = JsonWebKey.fromJson(json['keys'][1]);
+        var key2 = JsonWebKey.fromJson(json['keys']![1]);
 
         expect(key2.keyType, 'RSA');
         expect(key2.keyId, '2011-04-29');
@@ -105,13 +105,13 @@ void main() {
           ]
         };
 
-        var key1 = JsonWebKey.fromJson(json['keys'][0]);
+        var key1 = JsonWebKey.fromJson(json['keys']![0]);
 
         expect(key1.keyType, 'EC');
         expect(key1.keyId, '1');
         expect(key1.publicKeyUse, 'enc');
 
-        var key2 = JsonWebKey.fromJson(json['keys'][1]);
+        var key2 = JsonWebKey.fromJson(json['keys']![1]);
 
         expect(key2.keyType, 'RSA');
         expect(key2.keyId, '2011-04-29');
@@ -138,12 +138,12 @@ void main() {
           ]
         };
 
-        var key1 = JsonWebKey.fromJson(json['keys'][0]);
+        var key1 = JsonWebKey.fromJson(json['keys']![0]);
 
         expect(key1.keyType, 'oct');
         expect(key1.algorithm, 'A128KW');
 
-        var key2 = JsonWebKey.fromJson(json['keys'][1]);
+        var key2 = JsonWebKey.fromJson(json['keys']![1]);
 
         expect(key2.keyType, 'oct');
         expect(key2.keyId, 'HMAC key used in JWS spec Appendix A.1 example');
@@ -187,8 +187,8 @@ void main() {
                   JoseHeader.fromJson({'kid': 'key1', 'alg': 'A128KW'}), 'sign')
               .first;
 
-          expect(key.keyType, 'oct');
-          expect(key.algorithm, 'A128KW');
+          expect(key?.keyType, 'oct');
+          expect(key?.algorithm, 'A128KW');
 
           key = await store
               .findJsonWebKeys(

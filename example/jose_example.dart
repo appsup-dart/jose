@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/jose.dart';
-import 'package:x509/x509.dart';
 
 void main() async {
   await example1();
@@ -17,7 +15,7 @@ void main() async {
 }
 
 // decode and verify a JWS
-void example1() async {
+Future<void> example1() async {
   var encoded = 'eyJhbGciOiJFUzUxMiJ9.'
       'UGF5bG9hZA.'
       'AdwMgeerwtHoh-l192l60hp9wAHZFVJbLfD_UxMi70cwnZOYaRI1bKPWROc-mZZq'
@@ -31,7 +29,7 @@ void example1() async {
   var payload = jws.unverifiedPayload;
 
   print('content of jws: ${payload.stringContent}');
-  print('protected parameters: ${payload.protectedHeader.toJson()}');
+  print('protected parameters: ${payload.protectedHeader!.toJson()}');
 
   // create a JsonWebKey for verifying the signature
   var jwk = JsonWebKey.fromJson({
@@ -52,7 +50,7 @@ void example1() async {
 }
 
 // create a JWS
-void example2() async {
+Future<void> example2() async {
   // create a builder
   var builder = JsonWebSignatureBuilder();
 
@@ -82,7 +80,7 @@ void example2() async {
 }
 
 // decode and decrypt a JWE
-void example3() async {
+Future<void> example3() async {
   var encoded = 'eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.'
       'UGhIOguC7IuEvf_NPVaXsGMoLOmwvc1GyqlIKOK1nN94nHPoltGRhWhw7Zx0-kFm'
       '1NJn8LE9XShH59_i8J0PH5ZZyNfGy2xGdULU7sHNF6Gp2vPLgNZ__deLKxGHZ7Pc'
@@ -139,7 +137,7 @@ void example3() async {
 }
 
 // create a JWE
-void example4() async {
+Future<void> example4() async {
   // create a builder
   var builder = JsonWebEncryptionBuilder();
 
@@ -199,7 +197,7 @@ void example4() async {
 }
 
 // decode and verify and validate a JWT
-void example5() async {
+Future<void> example5() async {
   var encoded = 'eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.'
       'eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt'
       'cGxlLmNvbS9pc19yb290Ijp0cnVlfQ.'
@@ -233,7 +231,7 @@ void example5() async {
 }
 
 // create a JWT
-void example6() async {
+Future<void> example6() async {
   var claims = JsonWebTokenClaims.fromJson({
     'exp': Duration(hours: 4).inSeconds,
     'iss': 'alice',
@@ -263,7 +261,7 @@ void example6() async {
 }
 
 // create a JWT, sign with RS512
-void example7() async {
+Future<void> example7() async {
   var claims = JsonWebTokenClaims.fromJson({
     'exp': Duration(hours: 4).inSeconds,
     'iss': 'alice',
@@ -288,7 +286,7 @@ void example7() async {
 }
 
 // generate a key for use with ES256 signing
-void example8() async {
+Future<void> example8() async {
   var alg = JsonWebAlgorithm.getByName('ES256');
 
   var key = alg.generateRandomKey();

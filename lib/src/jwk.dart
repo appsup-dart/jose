@@ -2,7 +2,9 @@
 library jose.jwk;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/src/jwa.dart';
 import 'package:meta/meta.dart';
@@ -14,8 +16,6 @@ import 'dart:convert' as convert;
 import 'package:asn1lib/asn1lib.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async' as async show runZoned;
-import 'package:http_extensions_cache/http_extensions_cache.dart';
-import 'package:http_extensions/http_extensions.dart';
 
 /// JSON Web Key (JWK) represents a cryptographic key
 class JsonWebKey extends JsonObject {
@@ -25,9 +25,9 @@ class JsonWebKey extends JsonObject {
   JsonWebKey.fromJson(Map<String, dynamic> json)
       : _keyPair = KeyPair.fromJwk(json),
         super.from(json) {
-    if (keyType == null) throw ArgumentError.notNull('keyType');
-    if (x509CertificateChain != null && x509CertificateChain.isNotEmpty) {
-      var cert = x509CertificateChain.first;
+    if (json['kty'] == null) throw ArgumentError.notNull('keyType');
+    if (x509CertificateChain != null && x509CertificateChain!.isNotEmpty) {
+      var cert = x509CertificateChain!.first;
 
       if (_keyPair.publicKey != cert.publicKey) {
         throw ArgumentError("The public key in 'x5c' does not match this key.");
@@ -50,26 +50,32 @@ class JsonWebKey extends JsonObject {
   }
 
   /// Creates a JsonWebKey from a [PublicKey] and/or [PrivateKey]
-  factory JsonWebKey.fromCryptoKeys(
-      {PublicKey publicKey, PrivateKey privateKey, String keyId}) {
+  factory JsonWebKey.fromCryptoKeys({
+    PublicKey? publicKey,
+    PrivateKey? privateKey,
+    String? keyId,
+  }) {
     if (publicKey == null && privateKey == null) {
       throw ArgumentError('Either publicKey or privateKey should be non null');
     }
+
     if (privateKey is RsaPrivateKey) {
       if (publicKey != null && publicKey is! RsaPublicKey) {
         throw ArgumentError.value(
             publicKey, 'publicKey', 'should be an RsaPublicKey');
       }
+
       return JsonWebKey.rsa(
         modulus: privateKey.modulus,
-        exponent: (publicKey as RsaPublicKey)?.exponent,
+        exponent: (publicKey as RsaPublicKey?)?.exponent,
         privateExponent: privateKey.privateExponent,
         firstPrimeFactor: privateKey.firstPrimeFactor,
         secondPrimeFactor: privateKey.secondPrimeFactor,
         keyId: keyId,
       );
     }
-    String _toCurveName(Identifier curve) {
+
+    String _toCurveName(Identifier? curve) {
       return curvesByName.entries
           .firstWhere((element) => element.value == curve)
           .key;
@@ -80,44 +86,49 @@ class JsonWebKey extends JsonObject {
         throw ArgumentError.value(
             publicKey, 'publicKey', 'should be an EcPublicKey');
       }
+
       return JsonWebKey.ec(
         curve: _toCurveName(privateKey.curve),
         privateKey: privateKey.eccPrivateKey,
-        xCoordinate: (publicKey as EcPublicKey)?.xCoordinate,
-        yCoordinate: (publicKey as EcPublicKey)?.yCoordinate,
+        xCoordinate: (publicKey as EcPublicKey?)?.xCoordinate,
+        yCoordinate: publicKey?.yCoordinate,
         keyId: keyId,
       );
     }
+
     if (privateKey != null) {
       throw UnsupportedError(
           'Private key of type ${privateKey.runtimeType} not supported');
     }
+
     if (publicKey is RsaPublicKey) {
       return JsonWebKey.rsa(
-        modulus: publicKey?.modulus,
-        exponent: publicKey?.exponent,
+        modulus: publicKey.modulus,
+        exponent: publicKey.exponent,
         keyId: keyId,
       );
     }
+
     if (publicKey is EcPublicKey) {
       return JsonWebKey.ec(
           curve: _toCurveName(publicKey.curve),
           xCoordinate: publicKey.xCoordinate,
           yCoordinate: publicKey.yCoordinate);
     }
+
     throw UnsupportedError(
         'Public key of type ${publicKey.runtimeType} not supported');
   }
 
   /// Creates a JsonWebKey of type RSA
   JsonWebKey.rsa({
-    @required BigInt modulus,
-    BigInt exponent,
-    BigInt privateExponent,
-    BigInt firstPrimeFactor,
-    BigInt secondPrimeFactor,
-    String keyId,
-    String algorithm,
+    required BigInt modulus,
+    BigInt? exponent,
+    BigInt? privateExponent,
+    BigInt? firstPrimeFactor,
+    BigInt? secondPrimeFactor,
+    String? keyId,
+    String? algorithm,
   }) : this.fromJson({
           'kty': 'RSA',
           'n': _intToBase64(modulus),
@@ -131,12 +142,12 @@ class JsonWebKey extends JsonObject {
 
   /// Creates a JsonWebKey of type EC
   JsonWebKey.ec(
-      {@required String curve,
-      BigInt xCoordinate,
-      BigInt yCoordinate,
-      BigInt privateKey,
-      String keyId,
-      String algorithm})
+      {required String curve,
+      BigInt? xCoordinate,
+      BigInt? yCoordinate,
+      BigInt? privateKey,
+      String? keyId,
+      String? algorithm})
       : this.fromJson({
           'kty': 'EC',
           'crv': curve,
@@ -148,18 +159,19 @@ class JsonWebKey extends JsonObject {
         });
 
   /// Creates a JsonWebKey of type oct
-  JsonWebKey.symmetric({@required BigInt key, String keyId})
+  JsonWebKey.symmetric({required BigInt key, String? keyId})
       : this.fromJson({
           'kty': 'oct',
           'k': _intToBase64(key),
+          if (keyId != null) 'kid': keyId,
         });
 
   /// Parses a PEM encoded public or private key
-  factory JsonWebKey.fromPem(String pem, {String keyId}) {
+  factory JsonWebKey.fromPem(String pem, {String? keyId}) {
     var v = x509.parsePem(pem).first;
 
     if (v is x509.PrivateKeyInfo) {
-      v = (v as x509.PrivateKeyInfo).keyPair;
+      v = v.keyPair;
     }
 
     if (v is KeyPair) {
@@ -174,7 +186,7 @@ class JsonWebKey extends JsonObject {
   }
 
   /// Generates a random key suitable for the specified [algorithm]
-  factory JsonWebKey.generate(String algorithm, {int keyBitLength}) {
+  factory JsonWebKey.generate(String? algorithm, {int? keyBitLength}) {
     var alg = JsonWebAlgorithm.getByName(algorithm);
     return alg.generateRandomKey(keyBitLength: keyBitLength);
   }
@@ -194,7 +206,7 @@ class JsonWebKey extends JsonObject {
   ///
   /// Other values MAY be used.
   ///
-  String get publicKeyUse => this['use'];
+  String? get publicKeyUse => this['use'];
 
   /// The operation(s) that the key is intended to be used for.
   ///
@@ -210,106 +222,109 @@ class JsonWebKey extends JsonObject {
   /// * `deriveBits` (derive bits not to be used as a key)
   ///
   /// Other values MAY be used.
-  Set<String> get keyOperations => getTypedList('key_ops')?.toSet();
+  Set<String>? get keyOperations =>
+      getTypedList('key_ops')?.toSet() as Set<String>?;
 
   /// The algorithm intended for use with the key.
-  String get algorithm => this['alg'];
+  String? get algorithm => this['alg'];
 
   /// Key ID used to match a specific key.
   ///
   /// This is used, for instance, to choose among a set of keys within a JWK Set
   /// during key rollover.
-  String get keyId => this['kid'];
+  String? get keyId => this['kid'];
 
   /// A resource for an X.509 public key certificate or certificate chain.
-  Uri get x509Url => this['x5u'] == null ? null : Uri.parse(this['x5u']);
+  Uri? get x509Url => this['x5u'] == null ? null : Uri.parse(this['x5u']);
 
   /// A chain of one or more PKIX certificates.
-  List<x509.X509Certificate> get x509CertificateChain =>
-      (this['x5c'] as List)?.map((v) {
+  List<x509.X509Certificate>? get x509CertificateChain =>
+      (this['x5c'] as List?)?.map((v) {
         var bytes = convert.base64.decode(v);
         var p = ASN1Parser(bytes);
         var o = p.nextObject();
         if (o is! ASN1Sequence) {
           throw FormatException('Expected SEQUENCE, got ${o.runtimeType}');
         }
-        var s = o as ASN1Sequence;
+        var s = o;
         return x509.X509Certificate.fromAsn1(s);
-      })?.toList();
+      }).toList();
 
   /// A base64url encoded SHA-1 thumbprint (a.k.a. digest) of the DER encoding
   /// of an X.509 certificate.
-  String get x509CertificateThumbprint => this['x5t'];
+  String? get x509CertificateThumbprint => this['x5t'];
 
   /// A base64url encoded SHA-256 thumbprint (a.k.a. digest) of the DER encoding
   /// of an X.509 certificate.
-  String get x509CertificateSha256Thumbprint => this['x5t#S256'];
+  String? get x509CertificateSha256Thumbprint => this['x5t#S256'];
 
   /// Compute digital signature or MAC
-  List<int> sign(List<int> data, {String algorithm}) {
+  List<int> sign(List<int> data, {String? algorithm}) {
     _assertCanDo('sign');
-    var signer = _keyPair.privateKey.createSigner(_getAlgorithm(algorithm));
+    var signer = _keyPair.privateKey!.createSigner(_getAlgorithm(algorithm));
     var signature = signer.sign(data);
     return signature.data;
   }
 
   /// Verify digital signature or MAC
-  bool verify(List<int> data, List<int> signature, {String algorithm}) {
+  bool verify(List<int> data, List<int> signature, {String? algorithm}) {
     _assertCanDo('verify');
-    var verifier = _keyPair.publicKey.createVerifier(_getAlgorithm(algorithm));
-    return verifier.verify(data, Signature(signature));
+    var verifier = _keyPair.publicKey!.createVerifier(_getAlgorithm(algorithm));
+    return verifier.verify(
+        data as Uint8List, Signature(signature as Uint8List));
   }
 
   /// Encrypt content
   EncryptionResult encrypt(List<int> data,
-      {List<int> initializationVector,
-      List<int> additionalAuthenticatedData,
-      String algorithm}) {
+      {List<int>? initializationVector,
+      List<int>? additionalAuthenticatedData,
+      String? algorithm}) {
     _assertCanDo('encrypt');
     algorithm ??= this.algorithm;
     var encrypter =
-        _keyPair.publicKey.createEncrypter(_getAlgorithm(algorithm));
-    return encrypter.encrypt(data,
-        initializationVector: initializationVector,
-        additionalAuthenticatedData: additionalAuthenticatedData);
+        _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm)!);
+    return encrypter.encrypt(data as Uint8List,
+        initializationVector: initializationVector as Uint8List?,
+        additionalAuthenticatedData: additionalAuthenticatedData as Uint8List?);
   }
 
   /// Decrypt content and validate decryption, if applicable
   List<int> decrypt(List<int> data,
-      {List<int> initializationVector,
-      List<int> authenticationTag,
-      List<int> additionalAuthenticatedData,
-      String algorithm}) {
+      {List<int>? initializationVector,
+      List<int>? authenticationTag,
+      List<int>? additionalAuthenticatedData,
+      String? algorithm}) {
     _assertCanDo('decrypt');
     algorithm ??= this.algorithm;
     var decrypter =
-        _keyPair.privateKey.createEncrypter(_getAlgorithm(algorithm));
-    return decrypter.decrypt(EncryptionResult(data,
-        initializationVector: initializationVector,
-        authenticationTag: authenticationTag,
-        additionalAuthenticatedData: additionalAuthenticatedData));
+        _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm)!);
+    return decrypter.decrypt(EncryptionResult(data as Uint8List,
+        initializationVector: initializationVector as Uint8List?,
+        authenticationTag: authenticationTag as Uint8List?,
+        additionalAuthenticatedData:
+            additionalAuthenticatedData as Uint8List?));
   }
 
   /// Encrypt key
-  List<int> wrapKey(JsonWebKey key, {String algorithm}) {
+  List<int> wrapKey(JsonWebKey key, {String? algorithm}) {
     _assertCanDo('wrapKey');
     if (key.keyType != 'oct') {
       throw UnsupportedError('Can only wrap symmetric keys');
     }
     algorithm ??= this.algorithm;
     var encrypter =
-        _keyPair.publicKey.createEncrypter(_getAlgorithm(algorithm));
-    var v = encrypter.encrypt(decodeBase64EncodedBytes(key['k']));
+        _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm)!);
+    var v = encrypter.encrypt(decodeBase64EncodedBytes(key['k']) as Uint8List);
     return v.data;
   }
 
   /// Decrypt key and validate decryption, if applicable
-  JsonWebKey unwrapKey(List<int> data, {String algorithm}) {
+  JsonWebKey unwrapKey(List<int> data, {String? algorithm}) {
     _assertCanDo('unwrapKey');
     algorithm ??= this.algorithm;
     var decrypter =
-        _keyPair.privateKey.createEncrypter(_getAlgorithm(algorithm));
-    var v = decrypter.decrypt(EncryptionResult(data));
+        _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm)!);
+    var v = decrypter.decrypt(EncryptionResult(data as Uint8List));
     return JsonWebKey.fromJson({
       'kty': 'oct',
       'k': encodeBase64EncodedBytes(v),
@@ -354,16 +369,16 @@ class JsonWebKey extends JsonObject {
 
   /// Returns a JSON Web Algorithm name that can be used with this key for
   /// [operation]
-  String algorithmForOperation(String operation) {
+  String? algorithmForOperation(String operation) {
     if (!usableForOperation(operation)) return null;
     if (algorithm != null) return algorithm;
 
     return JsonWebAlgorithm.find(operation: operation, keyType: keyType)
-        .firstWhere((element) => true, orElse: () => null)
+        .firstWhereOrNull((element) => true)
         ?.name;
   }
 
-  AlgorithmIdentifier _getAlgorithm(String algorithm) {
+  AlgorithmIdentifier? _getAlgorithm(String? algorithm) {
     algorithm ??= this['alg'];
     if (this['alg'] != null) {
       if (this['alg'] != algorithm) {
@@ -387,7 +402,7 @@ class JsonWebKey extends JsonObject {
 class JsonWebKeySet extends JsonObject {
   /// An array of JWK values
   List<JsonWebKey> get keys =>
-      getTypedList('keys', factory: (v) => JsonWebKey.fromJson(v));
+      getTypedList('keys', factory: (v) => JsonWebKey.fromJson(v)) ?? const [];
 
   /// Constructs a [JsonWebKeySet] from the list of [keys]
   factory JsonWebKeySet.fromKeys(Iterable<JsonWebKey> keys) =>
@@ -415,17 +430,19 @@ class JsonWebKeyStore {
   /// Find [JsonWebKey]s for a [JoseObject] with header [header].
   ///
   /// See also [https://tools.ietf.org/html/rfc7515#appendix-D]
-  Stream<JsonWebKey> findJsonWebKeys(JoseHeader header, String operation) {
+  Stream<JsonWebKey?> findJsonWebKeys(JoseHeader header, String operation) {
     if (header.algorithm == 'none') return Stream.fromIterable([null]);
-    return _allKeys(header)
-        .where((key) => _isValidKeyFor(key, header, operation));
+    return _allKeys(header).where(
+      (key) => _isValidKeyFor(key, header, operation),
+    );
   }
 
   Stream<JsonWebKey> _allKeys(JoseHeader header) async* {
     // The key provided by the 'jwk'
-    if (header.jsonWebKey != null) yield header.jsonWebKey;
+    if (header.jsonWebKey != null) yield header.jsonWebKey!;
     // Other applicable keys available to the application
     yield* Stream.fromIterable(_keys);
+
     for (var s in _keySets) {
       yield* Stream.fromIterable(s.keys);
     }
@@ -440,22 +457,28 @@ class JsonWebKeyStore {
 */
     // Other applicable keys available to the application
     for (var url in _keySetUrls) {
-      yield* _keysFromSet(url);
+      yield* _keysFromSet(url).where((v) => v != null).cast();
     }
   }
 
-  bool _isValidKeyFor(JsonWebKey key, JoseHeader header, String operation) {
-    if (header.keyId != key.keyId) return false;
+  bool _isValidKeyFor(JsonWebKey? key, JoseHeader header, String operation) {
+    if (key == null) {
+      return false;
+    }
+
+    if (header.keyId != key.keyId) {
+      return false;
+    }
+
     return key.usableForAlgorithm(
             operation == 'encrypt' || operation == 'decrypt'
-                ? header.encryptionAlgorithm
-                : header.algorithm) &&
+                ? header.encryptionAlgorithm!
+                : header.algorithm!) &&
         key.usableForOperation(operation);
   }
 
-  Stream<JsonWebKey> _keysFromSet(Uri uri) async* {
+  Stream<JsonWebKey?> _keysFromSet(Uri uri) async* {
     var set = await JsonWebKeySetLoader.current.read(uri);
-    if (set == null) return;
     yield* Stream.fromIterable(set.keys);
   }
 }
@@ -494,7 +517,7 @@ abstract class JsonWebKeySetLoader {
 
   static final _jsonWebKeySetLoaderToken = Object();
 
-  static T runZoned<T>(T Function() body, {JsonWebKeySetLoader loader}) {
+  static T runZoned<T>(T Function() body, {JsonWebKeySetLoader? loader}) {
     return async
         .runZoned(body, zoneValues: {_jsonWebKeySetLoaderToken: loader});
   }
@@ -504,27 +527,31 @@ abstract class JsonWebKeySetLoader {
 class DefaultJsonWebKeySetLoader extends JsonWebKeySetLoader {
   final http.Client _httpClient;
 
+  final Map<Uri, MapEntry<DateTime, String>> _cache = {};
+  final Duration _cacheExpiry;
+
   /// Creates a [DefaultJsonWebKeySetLoader]
   ///
   /// A custom [httpClient] can be used for doing the http requests.
-  DefaultJsonWebKeySetLoader(
-      {http.Client httpClient,
-      Duration cacheExpiry = const Duration(minutes: 5)})
-      : _httpClient =
-            ExtendedClient(inner: httpClient ?? http.Client(), extensions: [
-          if (cacheExpiry != null && cacheExpiry.inMilliseconds > 0)
-            CacheExtension(defaultOptions: CacheOptions(expiry: cacheExpiry)),
-        ]);
+  DefaultJsonWebKeySetLoader({
+    http.Client? httpClient,
+    Duration cacheExpiry = const Duration(minutes: 5),
+  })  : _httpClient = httpClient ?? http.Client(),
+        _cacheExpiry = cacheExpiry;
 
   @override
   Future<String> readAsString(Uri uri) async {
     switch (uri.scheme) {
       case 'data':
-        return uri.data.contentAsString();
-        break;
+        return uri.data!.contentAsString();
       case 'https':
       case 'http':
+        var v = _cache[uri];
+        if (v != null && v.key.isAfter(DateTime.now())) {
+          return v.value;
+        }
         var r = await _httpClient.get(uri);
+        _cache[uri] = MapEntry(DateTime.now().add(_cacheExpiry), r.body);
         return r.body;
     }
     throw UnsupportedError('Uri\'s with scheme ${uri.scheme} not supported');

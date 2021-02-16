@@ -24,7 +24,7 @@ class JsonWebEncryption extends JoseObject {
   /// Serialization or the JWE JSON Serialization by including the AAD value as
   /// an integrity-protected Header Parameter value, but at the cost of the
   /// value being double base64url encoded.
-  final List<int> additionalAuthenticatedData;
+  final List<int>? additionalAuthenticatedData;
 
   /// Authentication Tag value resulting from authenticated encryption of the
   /// plaintext with Additional Authenticated Data.
@@ -33,11 +33,11 @@ class JsonWebEncryption extends JoseObject {
   JsonWebEncryption._(
     List<int> data,
     List<_JweRecipient> recipients, {
-    JsonObject protectedHeader,
-    JsonObject unprotectedHeader,
-    this.initializationVector,
+    JsonObject? protectedHeader,
+    JsonObject? unprotectedHeader,
+    this.initializationVector = const [],
     this.additionalAuthenticatedData,
-    this.authenticationTag,
+    this.authenticationTag = const [],
   }) : super(data, recipients,
             sharedProtectedHeader: protectedHeader,
             sharedUnprotectedHeader: unprotectedHeader);
@@ -77,7 +77,9 @@ class JsonWebEncryption extends JoseObject {
           protectedHeader: JsonObject.decode(json['protected']),
           unprotectedHeader: JsonObject.from(json['unprotected']),
           initializationVector: decodeBase64EncodedBytes(json['iv']),
-          additionalAuthenticatedData: decodeBase64EncodedBytes(json['aad']),
+          additionalAuthenticatedData: json['aad'] == null
+              ? null
+              : decodeBase64EncodedBytes(json['aad']),
           authenticationTag: decodeBase64EncodedBytes(json['tag']),
         );
 
@@ -96,7 +98,7 @@ class JsonWebEncryption extends JoseObject {
       throw StateError(
           'Compact serialization does not support unprotected header parameters');
     }
-    return '${sharedProtectedHeader.toBase64EncodedString()}.'
+    return '${sharedProtectedHeader!.toBase64EncodedString()}.'
         '${encodeBase64EncodedBytes(recipient.data)}.'
         '${encodeBase64EncodedBytes(initializationVector)}.'
         '${encodeBase64EncodedBytes(data)}.'
@@ -105,11 +107,12 @@ class JsonWebEncryption extends JoseObject {
 
   @override
   Map<String, dynamic> toJson() {
+    var aad = additionalAuthenticatedData;
     var v = {
       'protected': sharedProtectedHeader?.toBase64EncodedString(),
       'unprotected': sharedUnprotectedHeader?.toJson(),
       'iv': encodeBase64EncodedBytes(initializationVector),
-      'aad': encodeBase64EncodedBytes(additionalAuthenticatedData),
+      if (aad != null) 'aad': encodeBase64EncodedBytes(aad),
       'ciphertext': encodeBase64EncodedBytes(data),
       'tag': encodeBase64EncodedBytes(authenticationTag),
     };
@@ -122,11 +125,18 @@ class JsonWebEncryption extends JoseObject {
   }
 
   @override
-  List<int> getPayloadFor(
-      JsonWebKey key, JoseHeader header, JoseRecipient recipient) {
+  List<int>? getPayloadFor(
+    JsonWebKey? key,
+    JoseHeader header,
+    JoseRecipient recipient,
+  ) {
+    if (key == null) {
+      return null;
+    }
+
     var aad = sharedProtectedHeader?.toBase64EncodedString() ?? '';
     if (additionalAuthenticatedData != null) {
-      aad += '.${String.fromCharCodes(additionalAuthenticatedData)}';
+      aad += '.${String.fromCharCodes(additionalAuthenticatedData!)}';
     }
     if (header.encryptionAlgorithm == 'none') {
       throw JoseException('Encryption algorithm cannot be `none`');
@@ -143,7 +153,7 @@ class JsonWebEncryption extends JoseObject {
 }
 
 class _JweRecipient extends JoseRecipient {
-  _JweRecipient._({JsonObject header, List<int> encryptedKey})
+  _JweRecipient._({JsonObject? header, required List<int> encryptedKey})
       : super(unprotectedHeader: header, data: encryptedKey);
 
   @override
@@ -157,12 +167,12 @@ class _JweRecipient extends JoseRecipient {
 class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
   /// Additional value to be integrity protected by the authenticated encryption
   /// operation.
-  List<int> additionalAuthenticatedData;
+  List<int>? additionalAuthenticatedData;
 
   /// The content encryption algorithm to be used to perform authenticated
   /// encryption on the plaintext to produce the ciphertext and the
   /// Authentication Tag.
-  String encryptionAlgorithm = 'A128CBC-HS256';
+  String? encryptionAlgorithm = 'A128CBC-HS256';
 
   @override
   JsonWebEncryption build() {
@@ -182,15 +192,14 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
 
     var compact = recipients.length == 1 && additionalAuthenticatedData == null;
 
-    var cek = JsonWebKey.generate(encryptionAlgorithm);
+    JsonWebKey? cek = JsonWebKey.generate(encryptionAlgorithm);
     var sharedUnprotectedHeaderParams = <String, dynamic>{
       'enc': encryptionAlgorithm
     };
 
     var _recipients = recipients.map((r) {
       var key = r['_jwk'] as JsonWebKey;
-      var algorithm =
-          r['alg'] ?? key?.algorithmForOperation('wrapKey') ?? 'dir';
+      var algorithm = r['alg'] ?? key.algorithmForOperation('wrapKey') ?? 'dir';
       if (algorithm == 'dir') {
         if (recipients.length > 1) {
           throw StateError(
@@ -199,14 +208,14 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
         cek = key;
       }
       var encryptedKey = algorithm == 'dir'
-          ? null
+          ? const <int>[]
           : key.wrapKey(
-              cek,
+              cek!,
               algorithm: algorithm,
             );
 
       var unprotectedHeaderParams = <String, dynamic>{'alg': algorithm};
-      if (key?.keyId != null) {
+      if (key.keyId != null) {
         unprotectedHeaderParams['kid'] = key.keyId;
       }
       if (compact) {
@@ -223,18 +232,18 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
       protectedHeader = JsonObject.from(safeUnion(
           [protectedHeader?.toJson(), sharedUnprotectedHeaderParams]));
     }
-    var aad = protectedHeader.toBase64EncodedString();
+    var aad = protectedHeader!.toBase64EncodedString();
     if (additionalAuthenticatedData != null) {
-      aad += '.${String.fromCharCodes(additionalAuthenticatedData)}';
+      aad += '.${String.fromCharCodes(additionalAuthenticatedData!)}';
     }
-    var encryptedData = cek.encrypt(data,
+    var encryptedData = cek!.encrypt(data!,
         additionalAuthenticatedData: Uint8List.fromList(aad.codeUnits));
     return JsonWebEncryption._(encryptedData.data, _recipients,
         protectedHeader: protectedHeader,
         unprotectedHeader:
             compact ? null : JsonObject.from(sharedUnprotectedHeaderParams),
-        initializationVector: encryptedData.initializationVector,
-        authenticationTag: encryptedData.authenticationTag,
+        initializationVector: encryptedData.initializationVector!,
+        authenticationTag: encryptedData.authenticationTag!,
         additionalAuthenticatedData: additionalAuthenticatedData);
   }
 }

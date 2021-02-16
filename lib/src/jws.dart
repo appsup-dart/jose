@@ -24,9 +24,7 @@ class JsonWebSignature extends JoseObject {
         List.unmodifiable([
           _JwsRecipient(
               protectedHeader: JsonObject.decode(parts[0]),
-              data: parts[2].isNotEmpty
-                  ? decodeBase64EncodedBytes(parts[2])
-                  : null)
+              data: decodeBase64EncodedBytes(parts[2]))
         ]));
   }
 
@@ -65,8 +63,8 @@ class JsonWebSignature extends JoseObject {
       throw StateError(
           'Compact serialization does not support unprotected header parameters');
     }
-    return '${signature.protectedHeader.toBase64EncodedString()}.${encodeBase64EncodedBytes(data)}.'
-        '${signature.data == null ? '' : encodeBase64EncodedBytes(signature.data)}';
+    return '${signature.protectedHeader!.toBase64EncodedString()}.${encodeBase64EncodedBytes(data)}.'
+        '${encodeBase64EncodedBytes(signature.data)}';
   }
 
   /// Returns the unverified payload (with the protected header parameters from
@@ -74,15 +72,24 @@ class JsonWebSignature extends JoseObject {
   JosePayload get unverifiedPayload => JosePayload(data, commonHeader);
 
   @override
-  List<int> getPayloadFor(
-      JsonWebKey key, JoseHeader header, JoseRecipient recipient) {
+  List<int>? getPayloadFor(
+    JsonWebKey? key,
+    JoseHeader header,
+    JoseRecipient recipient,
+  ) {
     if (header.algorithm == 'none') {
-      return key == null && recipient.data == null ? this.data : null;
+      return key == null && recipient.data.isEmpty ? this.data : null;
     }
+
+    if (key == null) {
+      return null;
+    }
+
     // verify header
-    var encodedHeader = recipient.protectedHeader.toBase64EncodedString();
+    var encodedHeader = recipient.protectedHeader!.toBase64EncodedString();
     var encodedPayload = encodeBase64EncodedBytes(this.data);
     var data = convert.utf8.encode('$encodedHeader.$encodedPayload');
+
     return key.verify(data, recipient.data, algorithm: header.algorithm)
         ? this.data
         : null;
@@ -91,9 +98,9 @@ class JsonWebSignature extends JoseObject {
 
 class _JwsRecipient extends JoseRecipient {
   _JwsRecipient(
-      {JsonObject protectedHeader,
-      JsonObject unprotectedHeader,
-      List<int> data})
+      {JsonObject? protectedHeader,
+      JsonObject? unprotectedHeader,
+      required List<int> data})
       : super(
             protectedHeader: protectedHeader,
             unprotectedHeader: unprotectedHeader,
@@ -107,12 +114,12 @@ class _JwsRecipient extends JoseRecipient {
             unprotectedHeader:
                 json['header'] == null ? null : JsonObject.from(json['header']),
             data: json['signature'] == null
-                ? null
+                ? const []
                 : decodeBase64EncodedBytes(json['signature']));
 
   factory _JwsRecipient._sign(
-      List<int> payload, JsonObject protectedHeader, JsonWebKey key,
-      {String algorithm, bool protectAll = false}) {
+      List<int> payload, JsonObject protectedHeader, JsonWebKey? key,
+      {String? algorithm, bool protectAll = false}) {
     // Compute the encoded payload value BASE64URL(JWS Payload)
     var encodedPayload = encodeBase64EncodedBytes(payload);
 
@@ -120,10 +127,10 @@ class _JwsRecipient extends JoseRecipient {
     algorithm ??= key?.algorithmForOperation('sign') ?? 'none';
     var unprotectedHeaderParams = <String, dynamic>{'alg': algorithm};
     if (key?.keyId != null) {
-      unprotectedHeaderParams['kid'] = key.keyId;
+      unprotectedHeaderParams['kid'] = key!.keyId;
     }
     var commonKeys = protectedHeader
-        .toJson()
+        .toJson()!
         .keys
         .toSet()
         .intersection(unprotectedHeaderParams.keys.toSet());
@@ -138,7 +145,7 @@ class _JwsRecipient extends JoseRecipient {
     // Compute the encoded header value BASE64URL(UTF8(JWS Protected Header))
     if (protectAll) {
       protectedHeader = JsonObject.from(
-          unprotectedHeaderParams..addAll(protectedHeader.toJson()));
+          unprotectedHeaderParams..addAll(protectedHeader.toJson()!));
     }
     var unprotectedHeader =
         protectAll ? null : JsonObject.from(unprotectedHeaderParams);
@@ -147,8 +154,9 @@ class _JwsRecipient extends JoseRecipient {
 
     var data = convert.utf8.encode('$encodedHeader.$encodedPayload');
 
-    var signature =
-        algorithm == 'none' ? null : key.sign(data, algorithm: algorithm);
+    var signature = algorithm == 'none'
+        ? const <int>[]
+        : key!.sign(data, algorithm: algorithm);
 
     return _JwsRecipient(
         protectedHeader: protectedHeader,
@@ -158,13 +166,12 @@ class _JwsRecipient extends JoseRecipient {
 
   @override
   Map<String, dynamic> toJson() {
-    var o = <String, dynamic>{};
-    if (protectedHeader != null) {
-      o['protected'] = protectedHeader.toBase64EncodedString();
-    }
-    if (unprotectedHeader != null) o['header'] = unprotectedHeader.toJson();
-    if (data != null) o['signature'] = encodeBase64EncodedBytes(data);
-    return o;
+    return <String, dynamic>{
+      if (protectedHeader != null)
+        'protected': protectedHeader!.toBase64EncodedString(),
+      if (unprotectedHeader != null) 'header': unprotectedHeader!.toJson(),
+      'signature': encodeBase64EncodedBytes(data)
+    };
   }
 }
 
@@ -183,7 +190,7 @@ class JsonWebSignatureBuilder extends JoseObjectBuilder<JsonWebSignature> {
     var _signatures = recipients.map((r) {
       var key = r['_jwk'];
       var algorithm = r['alg'];
-      return _JwsRecipient._sign(payload.data, payload.protectedHeader, key,
+      return _JwsRecipient._sign(payload.data, payload.protectedHeader!, key,
           algorithm: algorithm, protectAll: recipients.length == 1);
     }).toList();
 

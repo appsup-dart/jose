@@ -219,7 +219,7 @@ void main() {
 }
 
 void _doTests(dynamic payload, dynamic key, dynamic encoded,
-    {List<String> allowedAlgorithms}) {
+    {List<String>? allowedAlgorithms}) {
   var jws = encoded is String
       ? JsonWebSignature.fromCompactSerialization(encoded)
       : JsonWebSignature.fromJson(encoded);
@@ -228,7 +228,10 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
       : JsonWebKeySet.fromKeys(key == null ? [] : [key]);
   var context = JsonWebKeyStore()..addKeySet(keys);
 
-  void _expectPayload(JoseObject jose, {List<String> allowedAlgorithms}) async {
+  Future<void> _expectPayload(
+    JoseObject jose, {
+    List<String>? allowedAlgorithms,
+  }) async {
     var content =
         await jose.getPayload(context, allowedAlgorithms: allowedAlgorithms);
     if (payload is String) {

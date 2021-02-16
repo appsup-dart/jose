@@ -1,3 +1,6 @@
+## 0.3.0-nullsafety.1
+
+- Migrate null safety
 
 ## 0.2.2
 - Bump `asn1lib` to 0.8.1.
