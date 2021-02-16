@@ -94,7 +94,7 @@ abstract class JoseObject {
   ///
   /// In case of a [JsonWebSignature], this is the plain content, in case of a
   /// [JsonWebEncryption], this is the ciphertext.
-  final List<int>? data;
+  final List<int> data;
 
   /// The per-recipient content of this object
   final List<JoseRecipient> recipients;
@@ -284,9 +284,12 @@ abstract class JoseRecipient {
   ///
   /// For [JsonWebSignature] objects, this is the signature, for
   /// [JsonWebEncryption] objects, this is the encrypted Content Encryption Key
-  final List<int>? data;
+  ///
+  /// For [JsonWebEncryption] with direct encryption, this will be an empty list.
+  final List<int> data;
 
-  JoseRecipient({this.data, this.protectedHeader, this.unprotectedHeader})
+  JoseRecipient(
+      {required this.data, this.protectedHeader, this.unprotectedHeader})
       : header = JoseHeader.fromJson(safeUnion(
             [protectedHeader?.toJson(), unprotectedHeader?.toJson()]));
 

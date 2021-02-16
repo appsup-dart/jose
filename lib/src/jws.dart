@@ -9,7 +9,7 @@ import 'dart:convert' as convert;
 /// JSON Web Signature (JWS) represents content secured with digital signatures
 /// or Message Authentication Codes (MACs) using JSON-based data structures.
 class JsonWebSignature extends JoseObject {
-  JsonWebSignature._(List<int>? data, List<_JwsRecipient> recipients)
+  JsonWebSignature._(List<int> data, List<_JwsRecipient> recipients)
       : super(data, recipients);
 
   /// Constructs a [JsonWebSignature] from its compact serialization
@@ -24,9 +24,7 @@ class JsonWebSignature extends JoseObject {
         List.unmodifiable([
           _JwsRecipient(
               protectedHeader: JsonObject.decode(parts[0]),
-              data: parts[2].isNotEmpty
-                  ? decodeBase64EncodedBytes(parts[2])
-                  : null)
+              data: decodeBase64EncodedBytes(parts[2]))
         ]));
   }
 
@@ -66,7 +64,7 @@ class JsonWebSignature extends JoseObject {
           'Compact serialization does not support unprotected header parameters');
     }
     return '${signature.protectedHeader!.toBase64EncodedString()}.${encodeBase64EncodedBytes(data)}.'
-        '${signature.data == null ? '' : encodeBase64EncodedBytes(signature.data)}';
+        '${encodeBase64EncodedBytes(signature.data)}';
   }
 
   /// Returns the unverified payload (with the protected header parameters from
@@ -80,7 +78,7 @@ class JsonWebSignature extends JoseObject {
     JoseRecipient recipient,
   ) {
     if (header.algorithm == 'none') {
-      return key == null && recipient.data == null ? this.data : null;
+      return key == null && recipient.data.isEmpty ? this.data : null;
     }
 
     if (key == null) {
@@ -92,7 +90,7 @@ class JsonWebSignature extends JoseObject {
     var encodedPayload = encodeBase64EncodedBytes(this.data);
     var data = convert.utf8.encode('$encodedHeader.$encodedPayload');
 
-    return key.verify(data, recipient.data!, algorithm: header.algorithm)
+    return key.verify(data, recipient.data, algorithm: header.algorithm)
         ? this.data
         : null;
   }
@@ -102,7 +100,7 @@ class _JwsRecipient extends JoseRecipient {
   _JwsRecipient(
       {JsonObject? protectedHeader,
       JsonObject? unprotectedHeader,
-      List<int>? data})
+      required List<int> data})
       : super(
             protectedHeader: protectedHeader,
             unprotectedHeader: unprotectedHeader,
@@ -116,11 +114,11 @@ class _JwsRecipient extends JoseRecipient {
             unprotectedHeader:
                 json['header'] == null ? null : JsonObject.from(json['header']),
             data: json['signature'] == null
-                ? null
+                ? const []
                 : decodeBase64EncodedBytes(json['signature']));
 
   factory _JwsRecipient._sign(
-      List<int>? payload, JsonObject protectedHeader, JsonWebKey? key,
+      List<int> payload, JsonObject protectedHeader, JsonWebKey? key,
       {String? algorithm, bool protectAll = false}) {
     // Compute the encoded payload value BASE64URL(JWS Payload)
     var encodedPayload = encodeBase64EncodedBytes(payload);
@@ -156,8 +154,9 @@ class _JwsRecipient extends JoseRecipient {
 
     var data = convert.utf8.encode('$encodedHeader.$encodedPayload');
 
-    var signature =
-        algorithm == 'none' ? null : key!.sign(data, algorithm: algorithm);
+    var signature = algorithm == 'none'
+        ? const <int>[]
+        : key!.sign(data, algorithm: algorithm);
 
     return _JwsRecipient(
         protectedHeader: protectedHeader,
@@ -167,13 +166,12 @@ class _JwsRecipient extends JoseRecipient {
 
   @override
   Map<String, dynamic> toJson() {
-    var o = <String, dynamic>{};
-    if (protectedHeader != null) {
-      o['protected'] = protectedHeader!.toBase64EncodedString();
-    }
-    if (unprotectedHeader != null) o['header'] = unprotectedHeader!.toJson();
-    if (data != null) o['signature'] = encodeBase64EncodedBytes(data);
-    return o;
+    return <String, dynamic>{
+      if (protectedHeader != null)
+        'protected': protectedHeader!.toBase64EncodedString(),
+      if (unprotectedHeader != null) 'header': unprotectedHeader!.toJson(),
+      'signature': encodeBase64EncodedBytes(data)
+    };
   }
 }
 
@@ -192,10 +190,10 @@ class JsonWebSignatureBuilder extends JoseObjectBuilder<JsonWebSignature> {
     var _signatures = recipients.map((r) {
       var key = r['_jwk'];
       var algorithm = r['alg'];
-      return _JwsRecipient._sign(payload.data, payload.protectedHeader!, key,
+      return _JwsRecipient._sign(payload.data!, payload.protectedHeader!, key,
           algorithm: algorithm, protectAll: recipients.length == 1);
     }).toList();
 
-    return JsonWebSignature._(payload.data, _signatures);
+    return JsonWebSignature._(payload.data!, _signatures);
   }
 }

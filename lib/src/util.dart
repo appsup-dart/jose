@@ -24,8 +24,8 @@ class JsonObject {
 
   /// Constructs a [JsonObject] from a base64 [encodedString] representation of
   /// the json string
-  JsonObject.decode(String? encodedString)
-      : this.fromBytes(decodeBase64EncodedBytes(encodedString)!);
+  JsonObject.decode(String encodedString)
+      : this.fromBytes(decodeBase64EncodedBytes(encodedString));
 
   /// Returns a JSON representation
   Map<String, dynamic>? toJson() => _json;
@@ -50,10 +50,10 @@ class JsonObject {
   }
 
   /// Returns the bytes representing the encoded JSON
-  List<int>? toBytes() => decodeBase64EncodedBytes(toBase64EncodedString());
+  List<int> toBytes() => decodeBase64EncodedBytes(toBase64EncodedString());
 
   /// Returns the base64 representation
-  String? toBase64EncodedString() => _encodedString ??=
+  String toBase64EncodedString() => _encodedString ??=
       encodeBase64EncodedBytes(convert.utf8.encode(convert.json.encode(_json)));
 
   /// Returns the property [key] as a core dart value
@@ -104,14 +104,12 @@ class JsonObject {
   String toString() => _json.toString();
 }
 
-List<int>? decodeBase64EncodedBytes(String? encodedString) =>
-    encodedString == null
-        ? null
-        : convert.base64Url.decode(encodedString +
-            List.filled((4 - encodedString.length % 4) % 4, '=').join());
+List<int> decodeBase64EncodedBytes(String encodedString) =>
+    convert.base64Url.decode(encodedString +
+        List.filled((4 - encodedString.length % 4) % 4, '=').join());
 
-String? encodeBase64EncodedBytes(List<int>? data) =>
-    data == null ? null : convert.base64Url.encode(data).replaceAll('=', '');
+String encodeBase64EncodedBytes(List<int> data) =>
+    convert.base64Url.encode(data).replaceAll('=', '');
 
 String encodeBigInt(BigInt? v) {
   final b256 = BigInt.from(256);
