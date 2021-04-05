@@ -248,7 +248,7 @@ void main() {
   group('JWK from pem files', () {
     test('JWK from pem PRIVATE RSA KEY', () {
       var key = JsonWebKey.fromPem(
-        File('test/tests/pem/rsa.key').readAsStringSync(),
+        File('test/pem/rsa.key').readAsStringSync(),
       );
 
       expect(key.keyType, 'RSA');
@@ -257,7 +257,7 @@ void main() {
     });
     test('JWK from pem PUBLIC KEY with RSA', () {
       var key = JsonWebKey.fromPem(
-        File('test/tests/pem/rsa.pub.key').readAsStringSync(),
+        File('test/pem/rsa.pub.key').readAsStringSync(),
       );
 
       expect(key.keyType, 'RSA');
@@ -266,7 +266,7 @@ void main() {
     });
     test('JWK from pem PRIVATE EC KEY with P-256 curve', () {
       var key = JsonWebKey.fromPem(
-        File('test/tests/pem/ec256.key').readAsStringSync(),
+        File('test/pem/ec256.key').readAsStringSync(),
       );
 
       expect(key.keyType, 'EC');
@@ -277,7 +277,7 @@ void main() {
     });
     test('JWK from pem PUBLIC KEY with EC P-256 curve', () {
       var key = JsonWebKey.fromPem(
-        File('test/tests/pem/ec256.pub.key').readAsStringSync(),
+        File('test/pem/ec256.pub.key').readAsStringSync(),
       );
 
       expect(key.keyType, 'EC');
@@ -287,7 +287,7 @@ void main() {
     });
     test('JWK from pem PRIVATE EC KEY with P-256K curve', () {
       var key = JsonWebKey.fromPem(
-        File('test/tests/pem/ec256k.key').readAsStringSync(),
+        File('test/pem/ec256k.key').readAsStringSync(),
       );
 
       expect(key.keyType, 'EC');
@@ -298,7 +298,7 @@ void main() {
     });
     test('JWK from pem PUBLIC KEY with EC P-256K curve', () {
       var key = JsonWebKey.fromPem(
-        File('test/tests/pem/ec256k.pub.key').readAsStringSync(),
+        File('test/pem/ec256k.pub.key').readAsStringSync(),
       );
 
       expect(key.keyType, 'EC');
