@@ -1,21 +1,23 @@
 /// [JSON Web Key](https://tools.ietf.org/html/rfc7517)
 library jose.jwk;
 
+import 'dart:async';
+import 'dart:async' as async show runZoned;
 import 'dart:convert';
+import 'dart:convert' as convert;
 import 'dart:typed_data';
 
+import 'package:asn1lib/asn1lib.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:crypto_keys/crypto_keys.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:jose/src/jwa.dart';
 import 'package:meta/meta.dart';
 import 'package:x509/x509.dart' as x509;
-import 'util.dart';
-import 'dart:async';
+
 import 'jose.dart';
-import 'dart:convert' as convert;
-import 'package:asn1lib/asn1lib.dart';
-import 'package:http/http.dart' as http;
-import 'dart:async' as async show runZoned;
+import 'util.dart';
 
 /// JSON Web Key (JWK) represents a cryptographic key
 class JsonWebKey extends JsonObject {
@@ -535,6 +537,9 @@ class DefaultJsonWebKeySetLoader extends JsonWebKeySetLoader {
   /// Creates a [DefaultJsonWebKeySetLoader]
   ///
   /// A custom [httpClient] can be used for doing the http requests.
+  ///
+  /// If the response includes valid "date" and "expires" headers, those are
+  /// used instead of [cacheExpiry].
   DefaultJsonWebKeySetLoader({
     http.Client? httpClient,
     Duration cacheExpiry = const Duration(minutes: 5),
@@ -553,9 +558,42 @@ class DefaultJsonWebKeySetLoader extends JsonWebKeySetLoader {
           return v.value;
         }
         var r = await _httpClient.get(uri);
-        _cache[uri] = MapEntry(DateTime.now().add(_cacheExpiry), r.body);
+        _cache[uri] = MapEntry(_localExpire(r), r.body);
         return r.body;
+      default:
+        throw UnsupportedError(
+          'Uri\'s with scheme ${uri.scheme} not supported',
+        );
     }
-    throw UnsupportedError('Uri\'s with scheme ${uri.scheme} not supported');
+  }
+
+  DateTime _localExpire(http.Response response) {
+    DateTime? fromHeader(String key) {
+      final str = response.headers[key];
+      if (str is String) {
+        try {
+          return parseHttpDate(str);
+        } on FormatException {
+          // noop!
+        }
+      }
+      return null;
+    }
+
+    var delta = _cacheExpiry;
+
+    final date = fromHeader('date');
+    if (date != null) {
+      final expires = fromHeader('expires');
+
+      if (expires != null) {
+        // Since the server time may not match the local time, calculate a delta
+        final newDelta = expires.difference(date);
+        if (!newDelta.isNegative) {
+          delta = newDelta;
+        }
+      }
+    }
+    return DateTime.now().add(delta);
   }
 }
