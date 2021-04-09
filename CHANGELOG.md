@@ -1,4 +1,8 @@
 
+## 0.3.2
+
+- Compatible with version `0.3.0` of `crypto_keys`
+
 ## 0.3.1
 
 - JsonWebKey.parsePem handles CERTIFICATE
