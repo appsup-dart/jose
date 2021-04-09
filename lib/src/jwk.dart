@@ -289,7 +289,7 @@ class JsonWebKey extends JsonObject {
     _assertCanDo('encrypt');
     algorithm ??= this.algorithm;
     var encrypter =
-        _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm)!);
+        _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm));
     return encrypter.encrypt(data as Uint8List,
         initializationVector: initializationVector as Uint8List?,
         additionalAuthenticatedData: additionalAuthenticatedData as Uint8List?);
@@ -304,7 +304,7 @@ class JsonWebKey extends JsonObject {
     _assertCanDo('decrypt');
     algorithm ??= this.algorithm;
     var decrypter =
-        _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm)!);
+        _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm));
     return decrypter.decrypt(EncryptionResult(data as Uint8List,
         initializationVector: initializationVector as Uint8List?,
         authenticationTag: authenticationTag as Uint8List?,
@@ -320,7 +320,7 @@ class JsonWebKey extends JsonObject {
     }
     algorithm ??= this.algorithm;
     var encrypter =
-        _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm)!);
+        _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm));
     var v = encrypter.encrypt(decodeBase64EncodedBytes(key['k']) as Uint8List);
     return v.data;
   }
@@ -330,7 +330,7 @@ class JsonWebKey extends JsonObject {
     _assertCanDo('unwrapKey');
     algorithm ??= this.algorithm;
     var decrypter =
-        _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm)!);
+        _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm));
     var v = decrypter.decrypt(EncryptionResult(data as Uint8List));
     return JsonWebKey.fromJson({
       'kty': 'oct',
@@ -385,7 +385,7 @@ class JsonWebKey extends JsonObject {
         ?.name;
   }
 
-  AlgorithmIdentifier? _getAlgorithm(String? algorithm) {
+  AlgorithmIdentifier _getAlgorithm(String? algorithm) {
     algorithm ??= this['alg'];
     if (this['alg'] != null) {
       if (this['alg'] != algorithm) {
@@ -393,9 +393,15 @@ class JsonWebKey extends JsonObject {
             "Algorithm should match key algorithm '${this['alg']}'");
       }
     }
-    return algorithm == null
-        ? null
-        : AlgorithmIdentifier.getByJwaName(algorithm);
+    if (algorithm == null) {
+      throw ArgumentError('No algorithm specified');
+    }
+    var id = AlgorithmIdentifier.getByJwaName(algorithm);
+
+    if (id == null) {
+      throw UnsupportedError('Algorithm with name $algorithm not found');
+    }
+    return id;
   }
 
   void _assertCanDo(String op) {
