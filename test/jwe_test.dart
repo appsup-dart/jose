@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:test/test.dart';
 import 'package:jose/src/jwe.dart';
 import 'package:jose/src/jwk.dart';
@@ -265,6 +267,25 @@ void main() {
               '4nMUXOgmgWvM-08tIZ-h5w');
     });
   });
+
+  test(
+      'Issue #26: Non-Obvious error happening while trying to create JWE token',
+      () async {
+    var jwk =
+        JsonWebKey.fromJson({'kty': 'oct', 'k': 'GawgguFyGrWKav7AX4VKUg'});
+    var builder = JsonWebEncryptionBuilder();
+    builder.stringContent =
+        '{"aud": "somekey", "sub": 12, "iss": "auth.example.com", "exp": 1617349353}';
+    builder.setProtectedHeader('createdAt', DateTime.now().toIso8601String());
+    builder.addRecipient(jwk, algorithm: 'dir');
+    builder.encryptionAlgorithm = 'A256GCM';
+
+    var jwe = builder.build();
+    expect(
+        utf8.decode(
+            jwe.getPayloadFor(jwk, jwe.commonHeader, jwe.recipients.first)!),
+        '{"aud": "somekey", "sub": 12, "iss": "auth.example.com", "exp": 1617349353}');
+  });
 }
 
 void _doTests(dynamic payload, dynamic key, dynamic encoded) {
@@ -303,7 +324,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
       ..encryptionAlgorithm = jwe.commonHeader.encryptionAlgorithm
       ..additionalAuthenticatedData = jwe.additionalAuthenticatedData;
 
-    var p = jwe.sharedProtectedHeader!.toJson()!;
+    var p = jwe.sharedProtectedHeader!.toJson();
     p.forEach((k, v) => builder.setProtectedHeader(k, v));
     builder.encryptionAlgorithm = jwe.commonHeader.encryptionAlgorithm;
     if (keys.keys.isEmpty) {

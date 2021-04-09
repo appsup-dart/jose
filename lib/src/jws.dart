@@ -130,7 +130,7 @@ class _JwsRecipient extends JoseRecipient {
       unprotectedHeaderParams['kid'] = key!.keyId;
     }
     var commonKeys = protectedHeader
-        .toJson()!
+        .toJson()
         .keys
         .toSet()
         .intersection(unprotectedHeaderParams.keys.toSet());
@@ -145,7 +145,7 @@ class _JwsRecipient extends JoseRecipient {
     // Compute the encoded header value BASE64URL(UTF8(JWS Protected Header))
     if (protectAll) {
       protectedHeader = JsonObject.from(
-          unprotectedHeaderParams..addAll(protectedHeader.toJson()!));
+          unprotectedHeaderParams..addAll(protectedHeader.toJson()));
     }
     var unprotectedHeader =
         protectAll ? null : JsonObject.from(unprotectedHeaderParams);

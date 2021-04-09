@@ -7,7 +7,7 @@ import 'package:crypto_keys/crypto_keys.dart';
 /// This object implements the equality operator, base64 (de)serialization and
 /// convenient methods to get typed properties.
 class JsonObject {
-  final Map<String, dynamic>? _json;
+  final Map<String, dynamic> _json;
   String? _encodedString;
 
   JsonObject._(this._json, [this._encodedString]);
@@ -28,7 +28,7 @@ class JsonObject {
       : this.fromBytes(decodeBase64EncodedBytes(encodedString));
 
   /// Returns a JSON representation
-  Map<String, dynamic>? toJson() => _json;
+  Map<String, dynamic> toJson() => _json;
 
   @override
   int get hashCode => toBase64EncodedString().hashCode;
@@ -57,7 +57,7 @@ class JsonObject {
       encodeBase64EncodedBytes(convert.utf8.encode(convert.json.encode(_json)));
 
   /// Returns the property [key] as a core dart value
-  dynamic operator [](String key) => _json![key];
+  dynamic operator [](String key) => _json[key];
 
   /// Returns the property [key] as a typed object
   T? getTyped<T>(String key, {T Function(dynamic v)? factory}) {

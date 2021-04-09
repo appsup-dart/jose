@@ -192,7 +192,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
 
     var compact = recipients.length == 1 && additionalAuthenticatedData == null;
 
-    JsonWebKey? cek = JsonWebKey.generate(encryptionAlgorithm);
+    var cek = JsonWebKey.generate(encryptionAlgorithm);
     var sharedUnprotectedHeaderParams = <String, dynamic>{
       'enc': encryptionAlgorithm
     };
@@ -205,12 +205,13 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
           throw StateError(
               'JWE can only have one recipient when using direct encryption with a shared symmetric key.');
         }
-        cek = key;
+        cek =
+            JsonWebKey.fromJson({'alg': encryptionAlgorithm, ...key.toJson()});
       }
       var encryptedKey = algorithm == 'dir'
           ? const <int>[]
           : key.wrapKey(
-              cek!,
+              cek,
               algorithm: algorithm,
             );
 
@@ -236,7 +237,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
     if (additionalAuthenticatedData != null) {
       aad += '.${String.fromCharCodes(additionalAuthenticatedData!)}';
     }
-    var encryptedData = cek!.encrypt(data!,
+    var encryptedData = cek.encrypt(data!,
         additionalAuthenticatedData: Uint8List.fromList(aad.codeUnits));
     return JsonWebEncryption._(encryptedData.data, _recipients,
         protectedHeader: protectedHeader,
