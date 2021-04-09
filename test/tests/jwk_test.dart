@@ -306,6 +306,31 @@ void main() {
       expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.p256k);
       expect(key.cryptoKeyPair.privateKey, isNull);
     });
+    test('JWK from pem CERTIFICATE', () {
+      var key = JsonWebKey.fromPem('-----BEGIN CERTIFICATE-----\n'
+          'MIIDHDCCAgSgAwIBAgIIcYRws2sTxJkwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE\n'
+          'AxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMjEw\n'
+          'NDA2MDkyMDIwWhcNMjEwNDIyMjEzNTIwWjAxMS8wLQYDVQQDEyZzZWN1cmV0b2tl\n'
+          'bi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTCCASIwDQYJKoZIhvcNAQEBBQAD\n'
+          'ggEPADCCAQoCggEBAMoRTVdYXX6kW8oEplmvw5K2LnN3TSxdU2E4r3LKwY5wWEOI\n'
+          'EJkgXq5mj+1D/AESJRE8eveVAKlR5/vBITPuJT99agjG/4vr9CNdEZjPc/TmqFmX\n'
+          'wldeX/oE89LIoSuBKR/g3CRI17Z/0V/ZaeLwNlWz/A/L6+MEfEbgAIiSxXFkctXL\n'
+          'TIWf3Ith24OTN8hVCgCaUWVLuY+FGprUnqQOqn1lpbtb1fgTSI/JAGXu6wsESyc3\n'
+          'xslD2e4VyBQ1i+JoW3/VKydlODd3THydFRBHGPdJQkLH4ccDh2kQ4sWQ4vjupSsk\n'
+          'BKMAvLqftpvVUo6LogEXNRmmI6sjluRlEvYk14kCAwEAAaM4MDYwDAYDVR0TAQH/\n'
+          'BAIwADAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwIwDQYJ\n'
+          'KoZIhvcNAQEFBQADggEBADFwIJVQERKO+x8Fx01ySjgSG6Rb81a17WQSCP2dlYmK\n'
+          'FBvwaKK5tGVDt3RUnMgM5myEY11TX8yBF8UstxkqtMTzJh+K1hV6lC11YRqWzodq\n'
+          'mJUBDuU39MYcRgoQn7szodBckdUGQlkTZti7xLApewkDpmR3Wx0KQBQpGt20Oaoq\n'
+          'B2a5DVq4KsRirPtS71QvekM9Aars7pKrVNhxvXgkIMpiUAj3GJR5NAsJD0tsa9LM\n'
+          'Lvo31/AE1VKiRJ9ta21m15wO4CJyAiWvRbRiHDN9b9oXuJwUlzUgT0GFWHayt56e\n'
+          'CYTU00dPphNMO1O07aqHq2O44/wPXYtQGDlHsg4sCeM=\n'
+          '-----END CERTIFICATE-----\n');
+
+      expect(key.keyType, 'RSA');
+      expect(key.cryptoKeyPair.publicKey, isA<RsaPublicKey>());
+      expect(key.cryptoKeyPair.privateKey, isNull);
+    });
   });
 
   group('Issues', () {

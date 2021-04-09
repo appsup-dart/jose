@@ -10,7 +10,7 @@ dependencies:
   crypto_keys: ^0.2.0
   meta: ^1.1.6
   typed_data: ^1.0.0
-  x509: ^0.2.0
+  x509: ^0.2.1
   http: ^0.13.0
   asn1lib: ^1.0.0
   collection: ^1.15.0

@@ -180,6 +180,9 @@ class JsonWebKey extends JsonObject {
       return JsonWebKey.fromCryptoKeys(
           publicKey: v.publicKey, privateKey: v.privateKey, keyId: keyId);
     }
+    if (v is x509.X509Certificate) {
+      v = v.tbsCertificate.subjectPublicKeyInfo;
+    }
     if (v is x509.SubjectPublicKeyInfo) {
       return JsonWebKey.fromCryptoKeys(
           publicKey: v.subjectPublicKey, keyId: keyId);

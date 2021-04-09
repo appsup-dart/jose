@@ -1,3 +1,8 @@
+
+## 0.3.1
+
+- JsonWebKey.parsePem handles CERTIFICATE
+
 ## 0.3.0
 
 - Migrate null safety
