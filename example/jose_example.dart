@@ -241,6 +241,7 @@ Future<void> example6() async {
   // create a builder, decoding the JWT in a JWS, so using a
   // JsonWebSignatureBuilder
   var builder = JsonWebSignatureBuilder();
+  builder.setProtectedHeader('typ', 'JWT');
 
   // set the content
   builder.jsonContent = claims.toJson();
@@ -272,6 +273,7 @@ Future<void> example7() async {
   // create a builder, decoding the JWT in a JWS, so using a
   // JsonWebSignatureBuilder
   var builder = JsonWebSignatureBuilder();
+  builder.setProtectedHeader('typ', 'JWT');
 
   // set the content
   builder.jsonContent = claims.toJson();
