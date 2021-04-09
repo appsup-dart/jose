@@ -250,8 +250,7 @@ Future<void> example6() async {
   builder.addRecipient(
       JsonWebKey.fromJson({
         'kty': 'oct',
-        'k':
-            'AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow'
+        'k': base64Urlencode(' ** my secret ** '),
       }),
       algorithm: 'HS256');
 
@@ -260,6 +259,11 @@ Future<void> example6() async {
 
   // output the compact serialization
   print('jwt compact serialization: ${jws.toCompactSerialization()}');
+}
+
+String base64Urlencode(String secret) {
+  var stringToBase64Url = utf8.fuse(base64Url);
+  return stringToBase64Url.encode(secret);
 }
 
 // create a JWT, sign with RS512
