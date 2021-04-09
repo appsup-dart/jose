@@ -2,6 +2,7 @@
 ## 0.3.1
 
 - JsonWebKey.parsePem handles CERTIFICATE
+- `DefaultJsonWebKeySetLoader`: if possible, use HTTP headers to determine cache expiration. 
 
 ## 0.3.0
 
