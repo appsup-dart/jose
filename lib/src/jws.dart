@@ -45,7 +45,7 @@ class JsonWebSignature extends JoseObject {
   Map<String, dynamic> toJson() {
     var v = <String, dynamic>{'payload': encodeBase64EncodedBytes(data)};
     if (recipients.length == 1) {
-      v..addAll(recipients.first.toJson());
+      v.addAll(recipients.first.toJson());
     } else {
       v['signatures'] = recipients.map((v) => v.toJson()).toList();
     }
