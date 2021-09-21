@@ -158,9 +158,4 @@ void main() {
     final claims = JsonWebTokenClaims.fromJson({'exp': 1300819380.0});
     expect(claims.expiry, DateTime.fromMillisecondsSinceEpoch(1300819380000));
   });
-
-  test('JsonWebTokenClaims can handle doubles in expiration', () {
-    final claims = JsonWebTokenClaims.fromJson({'exp': 1300819380.0});
-    expect(claims.expiry, DateTime.fromMillisecondsSinceEpoch(1300819380000));
-  });
 }
