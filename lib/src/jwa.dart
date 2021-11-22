@@ -63,6 +63,7 @@ class JsonWebAlgorithm {
     es256,
     es384,
     es512,
+    bp256r1,
 /*
     ps256,
     ps384,
@@ -117,6 +118,10 @@ class JsonWebAlgorithm {
   /// ECDSA using P-521 and SHA-512
   static const es512 =
       JsonWebAlgorithm('ES512', type: 'EC', use: 'sig', curve: 'P-521');
+
+  /// ECDSA using brainpool256r1 and SHA-256
+  static const bp256r1 =
+  JsonWebAlgorithm('BP256R1', type: 'EC', use: 'sig', curve: 'BP-256R1');
 
 /* TODO: not supported yet in crypto_keys
   /// RSASSA-PSS using SHA-256 and MGF1 with SHA-256

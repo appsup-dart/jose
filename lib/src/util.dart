@@ -153,5 +153,6 @@ final curvesByName = <String, Identifier>{
   'P-256': curves.p256,
   'P-256K': curves.p256k,
   'P-384': curves.p384,
-  'P-521': curves.p521
+  'P-521': curves.p521,
+  'BP-256R1': curves.bp256r1
 };
