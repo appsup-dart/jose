@@ -1,6 +1,6 @@
 name: jose
 description: Javascript Object Signing and Encryption (JOSE) library supporting JWE, JWS, JWK and JWT
-version: 0.3.3
+version: 0.3.4
 homepage: https://github.com/appsup-dart/jose
 publish_to: none
 
@@ -9,11 +9,11 @@ environment:
 
 dependencies:
   crypto_keys:
-    git: https://github.com/tallinn1960/crypto_keys.git
+    path: ../crypto_keys
   meta: ^1.1.6
   typed_data: ^1.0.0
   x509:
-    git: https://github.com/tallinn1960/x509.git
+    path: ../x509
   http: ^0.13.0
   http_parser: ^4.0.0
   asn1lib: ^1.0.0
