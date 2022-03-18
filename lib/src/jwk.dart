@@ -117,7 +117,8 @@ class JsonWebKey extends JsonObject {
       return JsonWebKey.ec(
           curve: _toCurveName(publicKey.curve),
           xCoordinate: publicKey.xCoordinate,
-          yCoordinate: publicKey.yCoordinate);
+          yCoordinate: publicKey.yCoordinate,
+          keyId: keyId);
     }
 
     throw UnsupportedError(
