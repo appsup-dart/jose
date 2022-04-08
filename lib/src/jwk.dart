@@ -230,7 +230,7 @@ class JsonWebKey extends JsonObject {
   ///
   /// Other values MAY be used.
   Set<String>? get keyOperations =>
-      getTypedList('key_ops')?.toSet() as Set<String>?;
+      getTypedList<String>('key_ops')?.toSet() as Set<String>?;
 
   /// The algorithm intended for use with the key.
   String? get algorithm => this['alg'];
@@ -415,7 +415,7 @@ class JsonWebKey extends JsonObject {
 class JsonWebKeySet extends JsonObject {
   /// An array of JWK values
   List<JsonWebKey> get keys =>
-      getTypedList('keys', factory: (v) => JsonWebKey.fromJson(v)) ?? const [];
+      getTypedList<JsonWebKey>('keys', factory: (v) => JsonWebKey.fromJson(v)) ?? const [];
 
   /// Constructs a [JsonWebKeySet] from the list of [keys]
   factory JsonWebKeySet.fromKeys(Iterable<JsonWebKey> keys) =>
