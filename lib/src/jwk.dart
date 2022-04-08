@@ -278,7 +278,7 @@ class JsonWebKey extends JsonObject {
     _assertCanDo('verify');
     var verifier = _keyPair.publicKey!.createVerifier(_getAlgorithm(algorithm));
     return verifier.verify(
-        data as Uint8List, Signature(signature as Uint8List));
+        Uint8List.fromList(data), Signature(Uint8List.fromList(signature)));
   }
 
   /// Encrypt content
@@ -290,9 +290,9 @@ class JsonWebKey extends JsonObject {
     algorithm ??= this.algorithm;
     var encrypter =
         _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm));
-    return encrypter.encrypt(data as Uint8List,
-        initializationVector: initializationVector as Uint8List?,
-        additionalAuthenticatedData: additionalAuthenticatedData as Uint8List?);
+    return encrypter.encrypt(Uint8List.fromList(data),
+        initializationVector: initializationVector != null ? Uint8List.fromList(initializationVector) : null,
+        additionalAuthenticatedData: additionalAuthenticatedData != null ? Uint8List.fromList(additionalAuthenticatedData) : null);
   }
 
   /// Decrypt content and validate decryption, if applicable
@@ -305,11 +305,11 @@ class JsonWebKey extends JsonObject {
     algorithm ??= this.algorithm;
     var decrypter =
         _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm));
-    return decrypter.decrypt(EncryptionResult(data as Uint8List,
-        initializationVector: initializationVector as Uint8List?,
-        authenticationTag: authenticationTag as Uint8List?,
+    return decrypter.decrypt(EncryptionResult(Uint8List.fromList(data),
+        initializationVector: initializationVector != null ? Uint8List.fromList(initializationVector) : null,
+        authenticationTag: authenticationTag != null ? Uint8List.fromList(authenticationTag) : null,
         additionalAuthenticatedData:
-            additionalAuthenticatedData as Uint8List?));
+            additionalAuthenticatedData != null ? Uint8List.fromList(additionalAuthenticatedData) : null));
   }
 
   /// Encrypt key
@@ -321,7 +321,7 @@ class JsonWebKey extends JsonObject {
     algorithm ??= this.algorithm;
     var encrypter =
         _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm));
-    var v = encrypter.encrypt(decodeBase64EncodedBytes(key['k']) as Uint8List);
+    var v = encrypter.encrypt(Uint8List.fromList(decodeBase64EncodedBytes(key['k'])));
     return v.data;
   }
 
@@ -331,7 +331,7 @@ class JsonWebKey extends JsonObject {
     algorithm ??= this.algorithm;
     var decrypter =
         _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm));
-    var v = decrypter.decrypt(EncryptionResult(data as Uint8List));
+    var v = decrypter.decrypt(EncryptionResult(Uint8List.fromList(data)));
     return JsonWebKey.fromJson({
       'kty': 'oct',
       'k': encodeBase64EncodedBytes(v),
