@@ -242,7 +242,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
 
     // RFC 7518 requires that a 96 bit iv is used with AESGCM and cjose insists
     var iv = (encryptionAlgorithm != null &&
-            encryptionAlgorithm!.contains(RegExp('A[0-9][0-9}[0-9]GCM')))
+            encryptionAlgorithm!.contains(RegExp('A[0-9][0-9][0-9]GCM')))
         ? Uint8List.fromList(
             List.generate(12, (_) => Random.secure().nextInt(256)))
         : null;
