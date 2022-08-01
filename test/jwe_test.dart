@@ -180,7 +180,7 @@ void main() {
       });
       group('Example JWE Using General JWE JSON Serialization: Recipient 2',
           () {
-        _doTests(plaintext, keys[0], encoded);
+        _doTests(plaintext, keys[1], encoded);
       });
     });
     group('Example JWE Using Flattened JWE JSON Serialization', () {
