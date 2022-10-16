@@ -1,10 +1,12 @@
 /// [JSON Web Encryption](https://tools.ietf.org/html/rfc7516)
 library jose.jwe;
 
-import 'jose.dart';
-import 'util.dart';
-import 'jwk.dart';
+import 'dart:math';
 import 'dart:typed_data';
+
+import 'jose.dart';
+import 'jwk.dart';
+import 'util.dart';
 
 /// JSON Web Encryption (JWE) represents encrypted content using JSON-based data
 /// structures
@@ -239,7 +241,16 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
     if (additionalAuthenticatedData != null) {
       aad += '.${String.fromCharCodes(additionalAuthenticatedData!)}';
     }
+
+    // RFC 7518 requires that a 96 bit iv is used with AESGCM and cjose insists
+    var iv = (encryptionAlgorithm != null &&
+            encryptionAlgorithm!.contains(RegExp('A[0-9][0-9][0-9]GCM')))
+        ? Uint8List.fromList(
+            List.generate(12, (_) => Random.secure().nextInt(256)))
+        : null;
+
     var encryptedData = cek.encrypt(data!,
+        initializationVector: iv,
         additionalAuthenticatedData: Uint8List.fromList(aad.codeUnits));
     return JsonWebEncryption._(encryptedData.data, _recipients,
         protectedHeader: protectedHeader,
