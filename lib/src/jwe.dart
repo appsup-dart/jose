@@ -75,7 +75,9 @@ class JsonWebEncryption extends JoseObject {
                           decodeBase64EncodedBytes(json['encrypted_key']))
                 ]),
           protectedHeader: JsonObject.decode(json['protected']),
-          unprotectedHeader: JsonObject.from(json['unprotected']),
+          unprotectedHeader: json['unprotected'] == null
+              ? null
+              : JsonObject.from(json['unprotected']),
           initializationVector: decodeBase64EncodedBytes(json['iv']),
           additionalAuthenticatedData: json['aad'] == null
               ? null
