@@ -1,6 +1,6 @@
-import 'package:test/test.dart';
-import 'package:jose/src/jwt.dart';
 import 'package:jose/src/jwk.dart';
+import 'package:jose/src/jwt.dart';
+import 'package:test/test.dart';
 
 void main() {
   group('JWT Examples from RFC7519', () {
@@ -152,5 +152,10 @@ void main() {
           '_J9N0mg0tQ6RbpxNEMNoA9QWk5lgdPvbh9BaO195abQ.'
           'AVO9iT5AV4CzvDJCdhSFlQ');
     });
+  });
+
+  test('JsonWebTokenClaims can handle doubles in expiration', () {
+    final claims = JsonWebTokenClaims.fromJson({'exp': 1300819380.0});
+    expect(claims.expiry, DateTime.fromMillisecondsSinceEpoch(1300819380000));
   });
 }
