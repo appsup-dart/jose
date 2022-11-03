@@ -1,3 +1,12 @@
+## 0.3.3
+
+ - **FIX**: allow double values when converting to DateTime and Duration (pull request [#33](https://github.com/appsup-dart/jose/issues/33) from PixelToast). ([3b204b10](https://github.com/appsup-dart/jose/commit/3b204b10101c7db7dc275279dcc4090a1494d238))
+ - **FIX**: type mismatch error on keyOperations getter (pull request [#37](https://github.com/appsup-dart/jose/issues/37) from samataro). ([8afde0fd](https://github.com/appsup-dart/jose/commit/8afde0fda8f0e5232e115dbeff25d2367b7521cb))
+ - **FIX**: add missing keyId when constructing a JWK with EcPublicKey (pull request [#38](https://github.com/appsup-dart/jose/issues/38) from tallinn1960). ([b8d11f32](https://github.com/appsup-dart/jose/commit/b8d11f325914ead348ae97fa7e344eb3dca7ee8f))
+ - **FIX**: use 12 byte iv with AESGCM (pull request [#39](https://github.com/appsup-dart/jose/issues/39) from tallinn1960). ([5b7e24da](https://github.com/appsup-dart/jose/commit/5b7e24da01fc3e782203ace5be9752055b54b33d))
+ - **FIX**: make unprotected header in JWE optional (pull request [#43](https://github.com/appsup-dart/jose/issues/43) from heacare). ([aefeeb04](https://github.com/appsup-dart/jose/commit/aefeeb043fd5203314a691deaece87fb4fbc54c2))
+ - **FEAT**: add support for es256k algorithm. ([a2d046a3](https://github.com/appsup-dart/jose/commit/a2d046a334a9060fc258610ce2e23c4865bfa3b3))
+
 
 ## 0.3.2
 
