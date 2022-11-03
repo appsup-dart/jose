@@ -22,3 +22,7 @@ dependencies:
 dev_dependencies:
   test: ^1.0.0
   pedantic: ^1.9.0
+
+false_secrets:
+  - test/pem/*
+  - example/*.key
