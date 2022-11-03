@@ -158,4 +158,23 @@ void main() {
     final claims = JsonWebTokenClaims.fromJson({'exp': 1300819380.0});
     expect(claims.expiry, DateTime.fromMillisecondsSinceEpoch(1300819380000));
   });
+
+  group('JWT with ES256K signature', () {
+    test('JWT with ES256K signature', () async {
+      var key = JsonWebKey.fromJson({
+        'kty': 'EC',
+        'd': 'e8HThqO0wR_Qw4pNIb80Cs0mYuCSqT6BSQj-o-tKTrg',
+        'x': 'A3hkIubgDggcoHzmVdXIm11gZ7UMaOa71JVf1eCifD8',
+        'y': 'ejpRwmCvNMdXMOjR2DodOt09OLPgNUrcKA9hBslaFU0',
+        'crv': 'P-256K',
+        'kid': '123'
+      });
+
+      var jwt = JsonWebToken.unverified(
+          'eyJhbGciOiJFUzI1NksiLCJraWQiOiIxMjMiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJ5b3UiLCJpc3MiOiJtZSIsImV4cCI6MTU3NjQ0Mzg2NS4wLCJpYXQiOjE1NzY0NDAyNjUsIm5iZiI6MTU3NjQ0MDI2NX0.nngSyreix-Ri0H1lC4PRGYLNEktMDUag22VmSYe_SRJFd_Oh-Qag1XSLr1Pq0puym8KSVVuPYCzIh5rsuAFH6g');
+
+      var verified = await jwt.verify(JsonWebKeyStore()..addKey(key));
+      expect(verified, true);
+    });
+  });
 }

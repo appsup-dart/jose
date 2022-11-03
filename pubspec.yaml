@@ -10,7 +10,7 @@ environment:
   sdk: '>=2.12.0 <3.0.0'
 
 dependencies:
-  crypto_keys: '>=0.2.0 <0.4.0'
+  crypto_keys: ^0.3.0+1
   meta: ^1.1.6
   typed_data: ^1.0.0
   x509: ^0.2.1
