@@ -31,9 +31,9 @@ class JsonWebSignature extends JoseObject {
   /// Constructs a [JsonWebSignature] from its flattened or general JSON
   /// representation
   factory JsonWebSignature.fromJson(Map<String, dynamic> json) {
-    List<_JwsRecipient> signatures;
+    Iterable<_JwsRecipient> signatures;
     if (json.containsKey('signatures')) {
-      signatures = json['signatures'].map((v) => _JwsRecipient.fromJson(v));
+      signatures = (json['signatures'] as List<Map<String, Object>>).map((v) => _JwsRecipient.fromJson(v));
     } else {
       signatures = [_JwsRecipient.fromJson(json)];
     }
