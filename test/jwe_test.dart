@@ -297,7 +297,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
       : JsonWebKeySet.fromKeys(key == null ? [] : [key]);
   var context = JsonWebKeyStore()..addKeySet(keys);
 
-  Future<void> _expectPayload(JsonWebEncryption jwe) async {
+  Future<void> expectPayload(JsonWebEncryption jwe) async {
     var content = await jwe.getPayload(context);
     if (payload is String) {
       expect(content.stringContent, payload);
@@ -316,7 +316,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
     }
   });
   test('decrypt', () async {
-    await _expectPayload(jwe);
+    await expectPayload(jwe);
   });
   test('create', () async {
     var builder = JsonWebEncryptionBuilder()
@@ -338,6 +338,6 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
     jwe = builder.build();
 
     if (encoded is String) jwe.toCompactSerialization();
-    await _expectPayload(jwe);
+    await expectPayload(jwe);
   });
 }

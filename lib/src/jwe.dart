@@ -201,7 +201,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
       'enc': encryptionAlgorithm
     };
 
-    var _recipients = recipients.map((r) {
+    var recipientsMapped = recipients.map((r) {
       var key = r['_jwk'] as JsonWebKey;
       var algorithm = r['alg'] ?? key.algorithmForOperation('wrapKey') ?? 'dir';
       if (algorithm == 'dir') {
@@ -252,7 +252,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
     var encryptedData = cek.encrypt(data!,
         initializationVector: iv,
         additionalAuthenticatedData: Uint8List.fromList(aad.codeUnits));
-    return JsonWebEncryption._(encryptedData.data, _recipients,
+    return JsonWebEncryption._(encryptedData.data, recipientsMapped,
         protectedHeader: protectedHeader,
         unprotectedHeader:
             compact ? null : JsonObject.from(sharedUnprotectedHeaderParams),

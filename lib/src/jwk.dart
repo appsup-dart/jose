@@ -79,7 +79,7 @@ class JsonWebKey extends JsonObject {
       );
     }
 
-    String _toCurveName(Identifier? curve) {
+    String toCurveName(Identifier? curve) {
       return curvesByName.entries
           .firstWhere((element) => element.value == curve)
           .key;
@@ -92,7 +92,7 @@ class JsonWebKey extends JsonObject {
       }
 
       return JsonWebKey.ec(
-        curve: _toCurveName(privateKey.curve),
+        curve: toCurveName(privateKey.curve),
         privateKey: privateKey.eccPrivateKey,
         xCoordinate: (publicKey as EcPublicKey?)?.xCoordinate,
         yCoordinate: publicKey?.yCoordinate,
@@ -115,7 +115,7 @@ class JsonWebKey extends JsonObject {
 
     if (publicKey is EcPublicKey) {
       return JsonWebKey.ec(
-          curve: _toCurveName(publicKey.curve),
+          curve: toCurveName(publicKey.curve),
           xCoordinate: publicKey.xCoordinate,
           yCoordinate: publicKey.yCoordinate,
           keyId: keyId);
@@ -231,7 +231,7 @@ class JsonWebKey extends JsonObject {
   ///
   /// Other values MAY be used.
   Set<String>? get keyOperations =>
-      getTypedList<String>('key_ops')?.toSet() as Set<String>?;
+      getTypedList<String>('key_ops')?.toSet();
 
   /// The algorithm intended for use with the key.
   String? get algorithm => this['alg'];

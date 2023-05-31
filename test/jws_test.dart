@@ -228,7 +228,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
       : JsonWebKeySet.fromKeys(key == null ? [] : [key]);
   var context = JsonWebKeyStore()..addKeySet(keys);
 
-  Future<void> _expectPayload(
+  Future<void> expectPayload(
     JoseObject jose, {
     List<String>? allowedAlgorithms,
   }) async {
@@ -244,7 +244,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
   }
 
   test('decode', () {
-    _expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
+    expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
     if (encoded is String) {
       expect(jws.toCompactSerialization(), encoded);
     } else {
@@ -252,7 +252,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
     }
   });
   test('verify', () async {
-    await _expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
+    await expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
   });
   test('create', () async {
     var builder = JsonWebSignatureBuilder()..content = payload;
@@ -268,6 +268,6 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
     var jws = builder.build();
 
     if (encoded is String) jws.toCompactSerialization();
-    await _expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
+    await expectPayload(jws, allowedAlgorithms: allowedAlgorithms);
   });
 }
