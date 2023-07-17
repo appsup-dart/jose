@@ -1,6 +1,6 @@
-## 0.4.0
+## 0.3.4
 
- - **FEAT**: migrate to dart 3 ([#50](https://github.com/appsup-dart/jose/pull/50))
+ - **FEAT**: Support latest `package:http` ([#50](https://github.com/appsup-dart/jose/pull/50))
 
 
 ## 0.3.3
