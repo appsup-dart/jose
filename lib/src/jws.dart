@@ -31,9 +31,9 @@ class JsonWebSignature extends JoseObject {
   /// Constructs a [JsonWebSignature] from its flattened or general JSON
   /// representation
   factory JsonWebSignature.fromJson(Map<String, dynamic> json) {
-    var signatures;
+    Iterable<_JwsRecipient> signatures;
     if (json.containsKey('signatures')) {
-      signatures = json['signatures'].map((v) => _JwsRecipient.fromJson(v));
+      signatures = (json['signatures'] as List<Map<String, Object>>).map((v) => _JwsRecipient.fromJson(v));
     } else {
       signatures = [_JwsRecipient.fromJson(json)];
     }
@@ -187,13 +187,13 @@ class JsonWebSignatureBuilder extends JoseObjectBuilder<JsonWebSignature> {
       throw StateError('No payload set');
     }
 
-    var _signatures = recipients.map((r) {
+    var signatures = recipients.map((r) {
       var key = r['_jwk'];
       var algorithm = r['alg'];
       return _JwsRecipient._sign(payload.data, payload.protectedHeader!, key,
           algorithm: algorithm, protectAll: recipients.length == 1);
     }).toList();
 
-    return JsonWebSignature._(payload.data, _signatures);
+    return JsonWebSignature._(payload.data, signatures);
   }
 }

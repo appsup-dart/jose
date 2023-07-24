@@ -75,7 +75,7 @@ void main() {
             'W0ITrJReOgo1cq9SbsxYawBgfp_gh6A5603k2-ZQwVK0JKSHuLFkuQ3U'
       }));
 
-    void _doTests(dynamic payload, dynamic encoded, [bool verify = true]) {
+    void doTests(dynamic payload, dynamic encoded, [bool verify = true]) {
       test('decode', () async {
         var jwt = await JsonWebToken.decodeAndVerify(encoded, context,
             allowedArguments: verify ? null : ['none']);
@@ -98,7 +98,7 @@ void main() {
     }
 
     group('Example JWT', () {
-      _doTests(
+      doTests(
           {'iss': 'joe', 'exp': 1300819380, 'http://example.com/is_root': true},
           'eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.'
           'eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt'
@@ -106,7 +106,7 @@ void main() {
           'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk');
     });
     group('Example Unsecured JWT', () {
-      _doTests(
+      doTests(
           {'iss': 'joe', 'exp': 1300819380, 'http://example.com/is_root': true},
           'eyJhbGciOiJub25lIn0.'
           'eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt'
@@ -114,7 +114,7 @@ void main() {
           false);
     });
     group('Example Encrypted JWT', () {
-      _doTests(
+      doTests(
           {'iss': 'joe', 'exp': 1300819380, 'http://example.com/is_root': true},
           'eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0.'
           'QR1Owv2ug2WyPBnbQrRARTeEk9kDO2w8qDcjiHnSJflSdv1iNqhWXaKH4MqAkQtM'
@@ -129,7 +129,7 @@ void main() {
           'fiK51VwhsxJ-siBMR-YFiA');
     });
     group('Example Nested JWT', () {
-      _doTests(
+      doTests(
           {'iss': 'joe', 'exp': 1300819380, 'http://example.com/is_root': true},
           'eyJhbGciOiJSU0ExXzUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiY3R5IjoiSldU'
           'In0.'

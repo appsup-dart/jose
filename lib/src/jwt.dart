@@ -112,7 +112,7 @@ class JsonWebToken {
     var joseObject = JoseObject.fromCompactSerialization(serialization);
     var content = await joseObject.getPayload(keyStore,
         allowedAlgorithms: allowedArguments);
-    var claims;
+    JsonWebTokenClaims claims;
     if (content.mediaType == 'JWT') {
       claims = (await decodeAndVerify(content.stringContent, keyStore,
               allowedArguments: allowedArguments))

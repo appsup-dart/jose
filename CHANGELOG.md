@@ -1,3 +1,8 @@
+## 0.3.4
+
+ - **FEAT**: Support latest `package:http` ([#50](https://github.com/appsup-dart/jose/pull/50))
+
+
 ## 0.3.3
 
  - **FIX**: allow double values when converting to DateTime and Duration (pull request [#33](https://github.com/appsup-dart/jose/issues/33) from PixelToast). ([3b204b10](https://github.com/appsup-dart/jose/commit/3b204b10101c7db7dc275279dcc4090a1494d238))
