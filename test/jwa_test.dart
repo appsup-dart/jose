@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto_keys/crypto_keys.dart';
-import 'package:jose/jose.dart';
+import 'package:jose_plus/jose.dart';
 import 'package:test/test.dart';
 
 void main() {

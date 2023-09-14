@@ -4,8 +4,7 @@ import 'dart:io';
 import 'package:crypto_keys/crypto_keys.dart';
 import 'package:http/http.dart';
 import 'package:http/testing.dart';
-import 'package:jose/src/jose.dart';
-import 'package:jose/src/jwk.dart';
+import 'package:jose_plus/jose.dart';
 import 'package:test/test.dart';
 
 void main() {

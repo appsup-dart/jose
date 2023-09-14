@@ -12,9 +12,9 @@ import 'package:collection/collection.dart' show IterableExtension;
 import 'package:crypto_keys/crypto_keys.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:jose/src/jwa.dart';
+import 'jwa.dart';
 import 'package:meta/meta.dart';
-import 'package:x509/x509.dart' as x509;
+import 'package:x509_plus/x509.dart' as x509;
 
 import 'jose.dart';
 import 'util.dart';

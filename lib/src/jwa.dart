@@ -4,8 +4,8 @@
 library jose.jwa;
 
 import 'package:crypto_keys/crypto_keys.dart';
-import 'package:jose/jose.dart';
-import 'package:jose/src/util.dart';
+import 'package:jose_plus/jose.dart';
+import 'package:jose_plus/src/util.dart';
 import 'package:meta/meta.dart';
 
 class JsonWebAlgorithm {
