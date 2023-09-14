@@ -12,11 +12,11 @@ dependencies:
   crypto_keys_plus: ^0.4.0
   meta: ^1.1.6
   typed_data: ^1.0.0
-  x509_plus: ^0.3.0
+  x509_plus: ^0.3.1
   http: ">=0.13.0 <2.0.0"
   http_parser: ^4.0.0
   asn1lib: ^1.0.0
-  collection: ^1.15.0
+  collection: ^1.14.13
 
 dev_dependencies:
   test: ^1.24.4
