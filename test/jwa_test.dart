@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:crypto_keys/crypto_keys.dart';
+import 'package:crypto_keys_plus/crypto_keys.dart';
 import 'package:jose_plus/jose.dart';
 import 'package:test/test.dart';
 
@@ -14,7 +14,9 @@ void main() {
         var keyPair = a.generateCryptoKeyPair();
 
         var key = a.jwkFromCryptoKeyPair(keyPair);
-
+        if (key == null) {
+          throw UnimplementedError('Unkown key');
+        }
         if (a.type == 'oct') {
           expect((key.cryptoKeyPair.publicKey as SymmetricKey).keyValue,
               (keyPair.publicKey as SymmetricKey).keyValue);

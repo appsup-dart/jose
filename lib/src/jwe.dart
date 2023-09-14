@@ -209,8 +209,14 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
           throw StateError(
               'JWE can only have one recipient when using direct encryption with a shared symmetric key.');
         }
-        cek =
-            JsonWebKey.fromJson({'alg': encryptionAlgorithm, ...key.toJson()});
+        final k = JsonWebKey.fromJson({
+          'alg': encryptionAlgorithm,
+          ...key.toJson(),
+        });
+        if (k == null) {
+          throw UnimplementedError('Unkown key.');
+        }
+        cek = k;
       }
       var encryptedKey = algorithm == 'dir'
           ? const <int>[]

@@ -3,7 +3,7 @@
 
 library jose.jwa;
 
-import 'package:crypto_keys/crypto_keys.dart';
+import 'package:crypto_keys_plus/crypto_keys.dart';
 import 'package:jose_plus/jose.dart';
 import 'package:jose_plus/src/util.dart';
 import 'package:meta/meta.dart';
@@ -214,7 +214,7 @@ class JsonWebAlgorithm {
   }
 
   @visibleForTesting
-  JsonWebKey jwkFromCryptoKeyPair(KeyPair keyPair) {
+  JsonWebKey? jwkFromCryptoKeyPair(KeyPair keyPair) {
     return JsonWebKey.fromJson({
       'kty': type,
       if (type == 'oct')
@@ -243,8 +243,13 @@ class JsonWebAlgorithm {
   }
 
   JsonWebKey generateRandomKey({int? keyBitLength}) {
-    return jwkFromCryptoKeyPair(
-        generateCryptoKeyPair(keyBitLength: keyBitLength));
+    final res = jwkFromCryptoKeyPair(
+      generateCryptoKeyPair(keyBitLength: keyBitLength),
+    );
+    if (res == null) {
+      throw UnimplementedError('Unkown key type.');
+    }
+    return res;
   }
 
   @visibleForTesting

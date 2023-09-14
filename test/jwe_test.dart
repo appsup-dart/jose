@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:jose_plus/jose.dart';
 import 'package:test/test.dart';
 
-
 void main() {
   group('JWE Examples from RFC7516', () {
     group('Example JWE using RSAES-OAEP and AES GCM', () {

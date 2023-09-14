@@ -8,8 +8,9 @@ import 'dart:convert' as convert;
 import 'dart:typed_data';
 
 import 'package:asn1lib/asn1lib.dart';
-import 'package:collection/collection.dart' show IterableExtension;
-import 'package:crypto_keys/crypto_keys.dart';
+import 'package:collection/collection.dart'
+    show IterableExtension, IterableNullableExtension;
+import 'package:crypto_keys_plus/crypto_keys.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'jwa.dart';
@@ -23,9 +24,10 @@ import 'util.dart';
 class JsonWebKey extends JsonObject {
   final KeyPair _keyPair;
 
-  /// Constructs a [JsonWebKey] from its JSON representation
-  JsonWebKey.fromJson(Map<String, dynamic> json)
-      : _keyPair = KeyPair.fromJwk(json),
+  JsonWebKey.fromKeyPair({
+    required KeyPair keyPair,
+    required Map<String, dynamic> json,
+  })  : _keyPair = keyPair,
         super.from(json) {
     if (json['kty'] == null) throw ArgumentError.notNull('keyType');
     if (x509CertificateChain != null && x509CertificateChain!.isNotEmpty) {
@@ -35,6 +37,15 @@ class JsonWebKey extends JsonObject {
         throw ArgumentError("The public key in 'x5c' does not match this key.");
       }
     }
+  }
+
+  /// Constructs a [JsonWebKey] from its JSON representation
+  static JsonWebKey? fromJson(Map<String, dynamic> json) {
+    final kp = KeyPair.fromJwk(json);
+    if (kp == null) {
+      return null;
+    }
+    return JsonWebKey.fromKeyPair(keyPair: kp, json: json);
   }
 
   static String _bytesToBase64(List<int> bytes) {
@@ -126,7 +137,7 @@ class JsonWebKey extends JsonObject {
   }
 
   /// Creates a JsonWebKey of type RSA
-  JsonWebKey.rsa({
+  static JsonWebKey rsa({
     required BigInt modulus,
     BigInt? exponent,
     BigInt? privateExponent,
@@ -134,42 +145,44 @@ class JsonWebKey extends JsonObject {
     BigInt? secondPrimeFactor,
     String? keyId,
     String? algorithm,
-  }) : this.fromJson({
-          'kty': 'RSA',
-          'n': _intToBase64(modulus),
-          if (exponent != null) 'e': _intToBase64(exponent),
-          if (privateExponent != null) 'd': _intToBase64(privateExponent),
-          if (firstPrimeFactor != null) 'p': _intToBase64(firstPrimeFactor),
-          if (secondPrimeFactor != null) 'q': _intToBase64(secondPrimeFactor),
-          if (keyId != null) 'kid': keyId,
-          if (algorithm != null) 'alg': algorithm
-        });
+  }) =>
+      JsonWebKey.fromJson({
+        'kty': 'RSA',
+        'n': _intToBase64(modulus),
+        if (exponent != null) 'e': _intToBase64(exponent),
+        if (privateExponent != null) 'd': _intToBase64(privateExponent),
+        if (firstPrimeFactor != null) 'p': _intToBase64(firstPrimeFactor),
+        if (secondPrimeFactor != null) 'q': _intToBase64(secondPrimeFactor),
+        if (keyId != null) 'kid': keyId,
+        if (algorithm != null) 'alg': algorithm
+      })!;
 
   /// Creates a JsonWebKey of type EC
-  JsonWebKey.ec(
-      {required String curve,
-      BigInt? xCoordinate,
-      BigInt? yCoordinate,
-      BigInt? privateKey,
-      String? keyId,
-      String? algorithm})
-      : this.fromJson({
-          'kty': 'EC',
-          'crv': curve,
-          if (xCoordinate != null) 'x': _intToBase64(xCoordinate),
-          if (yCoordinate != null) 'y': _intToBase64(yCoordinate),
-          if (privateKey != null) 'd': _intToBase64(privateKey),
-          if (keyId != null) 'kid': keyId,
-          if (algorithm != null) 'alg': algorithm
-        });
+  static JsonWebKey ec({
+    required String curve,
+    BigInt? xCoordinate,
+    BigInt? yCoordinate,
+    BigInt? privateKey,
+    String? keyId,
+    String? algorithm,
+  }) =>
+      JsonWebKey.fromJson({
+        'kty': 'EC',
+        'crv': curve,
+        if (xCoordinate != null) 'x': _intToBase64(xCoordinate),
+        if (yCoordinate != null) 'y': _intToBase64(yCoordinate),
+        if (privateKey != null) 'd': _intToBase64(privateKey),
+        if (keyId != null) 'kid': keyId,
+        if (algorithm != null) 'alg': algorithm
+      })!;
 
   /// Creates a JsonWebKey of type oct
-  JsonWebKey.symmetric({required BigInt key, String? keyId})
-      : this.fromJson({
-          'kty': 'oct',
-          'k': _intToBase64(key),
-          if (keyId != null) 'kid': keyId,
-        });
+  static JsonWebKey symmetric({required BigInt key, String? keyId}) =>
+      JsonWebKey.fromJson({
+        'kty': 'oct',
+        'k': _intToBase64(key),
+        if (keyId != null) 'kid': keyId,
+      })!;
 
   /// Parses a PEM encoded public or private key
   factory JsonWebKey.fromPem(String pem, {String? keyId}) {
@@ -188,7 +201,9 @@ class JsonWebKey extends JsonObject {
     }
     if (v is x509.SubjectPublicKeyInfo) {
       return JsonWebKey.fromCryptoKeys(
-          publicKey: v.subjectPublicKey, keyId: keyId);
+        publicKey: v.subjectPublicKey,
+        keyId: keyId,
+      );
     }
     throw UnsupportedError('Cannot create JWK from ${v.runtimeType}');
   }
@@ -230,8 +245,7 @@ class JsonWebKey extends JsonObject {
   /// * `deriveBits` (derive bits not to be used as a key)
   ///
   /// Other values MAY be used.
-  Set<String>? get keyOperations =>
-      getTypedList<String>('key_ops')?.toSet();
+  Set<String>? get keyOperations => getTypedList<String>('key_ops')?.toSet();
 
   /// The algorithm intended for use with the key.
   String? get algorithm => this['alg'];
@@ -292,8 +306,12 @@ class JsonWebKey extends JsonObject {
     var encrypter =
         _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm));
     return encrypter.encrypt(Uint8List.fromList(data),
-        initializationVector: initializationVector != null ? Uint8List.fromList(initializationVector) : null,
-        additionalAuthenticatedData: additionalAuthenticatedData != null ? Uint8List.fromList(additionalAuthenticatedData) : null);
+        initializationVector: initializationVector != null
+            ? Uint8List.fromList(initializationVector)
+            : null,
+        additionalAuthenticatedData: additionalAuthenticatedData != null
+            ? Uint8List.fromList(additionalAuthenticatedData)
+            : null);
   }
 
   /// Decrypt content and validate decryption, if applicable
@@ -307,10 +325,15 @@ class JsonWebKey extends JsonObject {
     var decrypter =
         _keyPair.privateKey!.createEncrypter(_getAlgorithm(algorithm));
     return decrypter.decrypt(EncryptionResult(Uint8List.fromList(data),
-        initializationVector: initializationVector != null ? Uint8List.fromList(initializationVector) : null,
-        authenticationTag: authenticationTag != null ? Uint8List.fromList(authenticationTag) : null,
-        additionalAuthenticatedData:
-            additionalAuthenticatedData != null ? Uint8List.fromList(additionalAuthenticatedData) : null));
+        initializationVector: initializationVector != null
+            ? Uint8List.fromList(initializationVector)
+            : null,
+        authenticationTag: authenticationTag != null
+            ? Uint8List.fromList(authenticationTag)
+            : null,
+        additionalAuthenticatedData: additionalAuthenticatedData != null
+            ? Uint8List.fromList(additionalAuthenticatedData)
+            : null));
   }
 
   /// Encrypt key
@@ -322,7 +345,8 @@ class JsonWebKey extends JsonObject {
     algorithm ??= this.algorithm;
     var encrypter =
         _keyPair.publicKey!.createEncrypter(_getAlgorithm(algorithm));
-    var v = encrypter.encrypt(Uint8List.fromList(decodeBase64EncodedBytes(key['k'])));
+    var v = encrypter
+        .encrypt(Uint8List.fromList(decodeBase64EncodedBytes(key['k'])));
     return v.data;
   }
 
@@ -338,7 +362,7 @@ class JsonWebKey extends JsonObject {
       'k': encodeBase64EncodedBytes(v),
       'use': 'enc',
       'keyOperations': ['encrypt', 'decrypt']
-    });
+    })!;
   }
 
   /// Returns true if this key can be used with the JSON Web Algorithm
@@ -416,11 +440,16 @@ class JsonWebKey extends JsonObject {
 class JsonWebKeySet extends JsonObject {
   /// An array of JWK values
   List<JsonWebKey> get keys =>
-      getTypedList<JsonWebKey>('keys', factory: (v) => JsonWebKey.fromJson(v)) ?? const [];
+      getTypedList<JsonWebKey?>('keys', factory: (v) => JsonWebKey.fromJson(v))
+          ?.whereNotNull()
+          .toList() ??
+      const [];
 
   /// Constructs a [JsonWebKeySet] from the list of [keys]
-  factory JsonWebKeySet.fromKeys(Iterable<JsonWebKey> keys) =>
-      JsonWebKeySet.fromJson({'keys': keys.map((v) => v.toJson()).toList()});
+  factory JsonWebKeySet.fromKeys(Iterable<JsonWebKey?> keys) =>
+      JsonWebKeySet.fromJson({
+        'keys': keys.map((v) => v?.toJson()).whereNotNull().toList(),
+      });
 
   /// Constructs a [JsonWebKeySet] from its JSON representation
   JsonWebKeySet.fromJson(Map<String, dynamic> json) : super.from(json);
@@ -436,7 +465,12 @@ class JsonWebKeyStore {
   void addKeySet(JsonWebKeySet keys) => _keySets.add(keys);
 
   /// Adds a key to this store
-  void addKey(JsonWebKey key) => _keys.add(key);
+  void addKey(JsonWebKey? key) {
+    if (key == null) {
+      return;
+    }
+    _keys.add(key);
+  }
 
   /// Adds a key set url to this store
   void addKeySetUrl(Uri url) => _keySetUrls.add(url);

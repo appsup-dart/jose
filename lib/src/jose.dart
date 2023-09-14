@@ -33,7 +33,7 @@ class JoseHeader extends JsonObject {
   /// The public key that corresponds to the key used to digitally sign the
   /// [JsonWebSignature] or encrypt the [JsonWebEncryption].
   JsonWebKey? get jsonWebKey =>
-      getTyped('jwk', factory: (v) => JsonWebKey.fromJson(v));
+      getTyped<JsonWebKey?>('jwk', factory: (v) => JsonWebKey.fromJson(v));
 
   /// A hint indicating which key was used to secure the [JsonWebSignature] or
   /// encrypt the [JsonWebEncryption].
