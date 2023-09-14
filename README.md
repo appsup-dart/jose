@@ -1,5 +1,5 @@
 
-[![Build Status](https://travis-ci.org/appsup-dart/jose.svg?branch=master)](https://travis-ci.org/appsup-dart/jose) 
+[![Build Status](https://travis-ci.org/Bdaya-Dev/jose.svg?branch=master)](https://travis-ci.org/Bdaya-Dev/jose) 
 [:heart: sponsor](https://github.com/sponsors/rbellens)
 
 
@@ -324,7 +324,7 @@ main() async {
 
 Please file feature requests and bugs at the [issue tracker][tracker].
 
-[tracker]: https://github.com/appsup-dart/jose/issues
+[tracker]: https://github.com/Bdaya-Dev/jose/issues
 
 
 ## Sponsor
