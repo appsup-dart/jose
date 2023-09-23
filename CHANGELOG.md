@@ -1,3 +1,6 @@
+## 0.4.2
+ - **feat**: add `sid` to JWT claims.
+
 ## 0.4.1
  - **FIX**: lower `package:collection` constraints.
  

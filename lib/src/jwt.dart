@@ -15,6 +15,9 @@ class JsonWebTokenClaims extends JsonObject {
   /// Identifies the principal that issued the JWT.
   Uri? get issuer => getTyped('iss');
 
+  /// Session ID
+  String? get sid => getTyped('sid');
+
   /// Identifies the principal that is the subject of the JWT.
   ///
   /// The claims in a JWT are normally statements about the subject.
