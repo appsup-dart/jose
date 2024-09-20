@@ -85,16 +85,16 @@ class JsonObject {
   T? _convert<T>(dynamic v, {T Function(dynamic v)? factory}) {
     if (v == null) return null;
     switch (T) {
-      case Uri:
+      case == Uri:
         return Uri.parse(v) as T;
-      case DateTime:
+      case == DateTime:
         return DateTime.fromMillisecondsSinceEpoch(((v as num).round() * 1000))
             as T;
-      case Duration:
+      case == Duration:
         return Duration(seconds: (v as num).round()) as T;
-      case String:
-      case num:
-      case bool:
+      case == String:
+      case == num:
+      case == bool:
         return v;
       default:
         return factory == null ? v : factory(v);

@@ -22,7 +22,7 @@ dependencies:
 
 dev_dependencies:
   test: ^1.24.4
-  lints: ^2.1.1
+  lints: ^4.0.0
 
 false_secrets:
   - test/pem/*

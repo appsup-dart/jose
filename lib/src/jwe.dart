@@ -35,14 +35,14 @@ class JsonWebEncryption extends JoseObject {
   final List<int> authenticationTag;
 
   JsonWebEncryption._(
-    List<int> data,
-    List<_JweRecipient> recipients, {
+    super.data,
+    List<_JweRecipient> super.recipients, {
     JsonObject? protectedHeader,
     JsonObject? unprotectedHeader,
     this.initializationVector = const [],
     this.additionalAuthenticatedData,
     this.authenticationTag = const [],
-  }) : super(data, recipients,
+  }) : super(
             sharedProtectedHeader: protectedHeader,
             sharedUnprotectedHeader: unprotectedHeader);
 
