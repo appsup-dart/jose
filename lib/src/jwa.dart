@@ -121,7 +121,7 @@ class JsonWebAlgorithm {
   static const es512 =
       JsonWebAlgorithm('ES512', type: 'EC', use: 'sig', curve: 'P-521');
 
-  /// ECDSA using P-256 and SHA-256
+  /// ECDSA using P-256K and SHA-256
   static const es256k =
       JsonWebAlgorithm('ES256K', type: 'EC', use: 'sig', curve: 'P-256K');
 
