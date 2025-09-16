@@ -1,3 +1,34 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+## 2025-09-16
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`jose` - `v0.3.5`](#jose---v035)
+
+---
+
+#### `jose` - `v0.3.5`
+
+ - **REFACTOR**: support for archive ^4.0.0. ([d6150a5a](https://github.com/appsup-dart/jose/commit/d6150a5aae365127936c821888e0923ac2ba45d3))
+ - **FEAT**: support compressed data in jwe. ([4f1dd72d](https://github.com/appsup-dart/jose/commit/4f1dd72d1b764fa174e11546f47efbc68a83f37c))
+
+## 0.3.5
+
+ - **REFACTOR**: support for archive ^4.0.0. ([d6150a5a](https://github.com/appsup-dart/jose/commit/d6150a5aae365127936c821888e0923ac2ba45d3))
+ - **FEAT**: support compressed data in jwe. ([4f1dd72d](https://github.com/appsup-dart/jose/commit/4f1dd72d1b764fa174e11546f47efbc68a83f37c))
+
 ## 0.3.4
 
  - **FEAT**: Support latest `package:http` ([#50](https://github.com/appsup-dart/jose/pull/50))
