@@ -1,5 +1,8 @@
 
 [![Build Status](https://travis-ci.org/appsup-dart/jose.svg?branch=master)](https://travis-ci.org/appsup-dart/jose) 
+
+[![Ceasefire Now](https://badge.techforpalestine.org/default)](https://techforpalestine.org/learn-more)
+
 [:heart: sponsor](https://github.com/sponsors/rbellens)
 
 
