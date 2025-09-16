@@ -1,5 +1,5 @@
 /// [JSON Web Encryption](https://tools.ietf.org/html/rfc7516)
-library jose.jwe;
+library;
 
 import 'dart:math';
 import 'dart:typed_data';

@@ -1,5 +1,5 @@
 /// [JSON Web Token](https://tools.ietf.org/html/rfc7519)
-library jose.jwt;
+library;
 
 import 'jose.dart';
 import 'jwk.dart';

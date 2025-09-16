@@ -1,5 +1,5 @@
 /// [JSON Object Signing and Encryption](https://tools.ietf.org/html/rfc7515)
-library jose.jose;
+library;
 
 import 'util.dart';
 import 'jws.dart';

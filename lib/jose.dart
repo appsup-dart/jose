@@ -1,6 +1,6 @@
 /// Javascript Object Signing and Encryption (JOSE) library
 ///
-library jose;
+library;
 
 export 'src/jose.dart';
 export 'src/jwk.dart';

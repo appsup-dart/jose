@@ -1,5 +1,5 @@
 /// [JSON Web Signature](https://tools.ietf.org/html/rfc7515)
-library jose.jws;
+library;
 
 import 'util.dart';
 import 'jwk.dart';

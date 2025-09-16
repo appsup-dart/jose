@@ -1,7 +1,7 @@
 /// [JSON Web Algorithms](https://tools.ietf.org/html/rfc7518)
 // ignore_for_file: constant_identifier_names
 
-library jose.jwa;
+library;
 
 import 'package:crypto_keys/crypto_keys.dart';
 import 'package:jose/jose.dart';

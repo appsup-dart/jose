@@ -1,5 +1,5 @@
 /// [JSON Web Key](https://tools.ietf.org/html/rfc7517)
-library jose.jwk;
+library;
 
 import 'dart:async';
 import 'dart:async' as async show runZoned;
