@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:test/test.dart';
 import 'package:jose/src/jwe.dart';
 import 'package:jose/src/jwk.dart';
+import 'package:jose/src/jwa.dart';
 
 void main() {
   group('JWE Examples from RFC7516', () {
@@ -209,7 +210,7 @@ void main() {
       var keyStore = JsonWebKeyStore()..addKey(key);
 
       builder.addRecipient(key, algorithm: 'dir');
-      var jwe = builder.build();
+      var jwe = await builder.build();
 
       jwe = JsonWebEncryption.fromCompactSerialization(
           jwe.toCompactSerialization());
@@ -280,11 +281,126 @@ void main() {
     builder.addRecipient(jwk, algorithm: 'dir');
     builder.encryptionAlgorithm = 'A256GCM';
 
-    var jwe = builder.build();
+    var jwe = await builder.build();
     expect(
         utf8.decode(
             jwe.getPayloadFor(jwk, jwe.commonHeader, jwe.recipients.first)!),
         '{"aud": "somekey", "sub": 12, "iss": "auth.example.com", "exp": 1617349353}');
+  });
+  test('ECDH-ES', () async {
+    final privateKey =
+        JsonWebAlgorithm('Something', type: 'EC', curve: 'BP-256', use: 'enc')
+            .generateRandomKey();
+
+    final encrypted = (await (JsonWebEncryptionBuilder()
+              ..encryptionAlgorithm = 'A256GCM'
+              ..jsonContent = {'test': 'test'}
+              ..mediaType = 'NJWT'
+              ..setProtectedHeader(
+                  'exp', DateTime.now().millisecondsSinceEpoch * 1000)
+              ..addRecipient(privateKey,
+                  algorithm: 'ECDH-ES')) //, algorithm: 'BP256R1'))
+            .build())
+        .toCompactSerialization();
+
+    final store = JsonWebKeyStore();
+    store.addKey(privateKey);
+
+    final payload = await JsonWebEncryption.fromCompactSerialization(encrypted)
+        .getPayload(store);
+    print("payload ${payload.jsonContent}");
+  });
+
+  test('ECDH-ES decrypt dinichiesa', () async {
+    final privateKey = JsonWebKey.fromPem("""-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgEPxelslVRztFvYqK
+G6cjYc+0v1ACp6Pq0Y8DwBMnER6hRANCAARTXb8v3Rgb6EEnng5iK0prQcsR4isP
+DCgeBAvgFDp8K65zbqb3cKVFOtiqOjjXzHl8MzK+vspaQgzBVTrFxYk2
+-----END PRIVATE KEY-----""");
+
+    final publicKey = JsonWebKey.fromPem("""-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEU12/L90YG+hBJ54OYitKa0HLEeIr
+DwwoHgQL4BQ6fCuuc26m93ClRTrYqjo418x5fDMyvr7KWkIMwVU6xcWJNg==
+-----END PUBLIC KEY-----""");
+
+    final compactJwt =
+        "eyJhbGciOiJFQ0RILUVTIiwidHlwIjoiSldUIiwiZW5jIjoiQTI1NkdDTSIsImVwayI6eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2IiwieCI6Ill0aDdLTUhUYzNFUUQwUHpnZ0FiN29fSDFadlFnQzFUOGdjMS1rZjFTanMiLCJ5IjoiQXZIeHF1T3RGZ1ZveHNYUHFjWGpfWjZhMDBDY0ZFMzJpRjdiY3hVZGFqdyJ9fQ..5pjvf-Iu4tII5jqf.5j3HuDUfDF4NryaG78Ib5Mpsp_bB4tfWiyffc07rzJZufR7bczu8PbNxpOCZGrTczdJR6I6nCfoe6uQRg7xw3D-4ARBVggs04bWhkt-QFLXMJ-k8_QLH6FER5ALUbw.cP7kgs48KkNoBPH6pn_YEA";
+
+    final header = """{
+  "alg": "ECDH-ES",
+  "typ": "JWT",
+  "enc": "A256GCM",
+  "epk": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "Yth7KMHTc3EQD0PzggAb7o_H1ZvQgC1T8gc1-kf1Sjs",
+    "y": "AvHxquOtFgVoxsXPqcXj_Z6a00CcFE32iF7bcxUdajw"
+  }
+}""";
+
+    final payload = """{
+  "iss": "DinoChiesa.github.io",
+  "sub": "idris",
+  "aud": "naimish",
+  "iat": 1688750128,
+  "exp": 1688750728
+}""";
+
+    final store = JsonWebKeyStore();
+    store.addKey(privateKey);
+
+    final decPayload =
+        await JsonWebEncryption.fromCompactSerialization(compactJwt)
+            .getPayload(store);
+    print("decPayload = ${decPayload.jsonContent}");
+    expect(decPayload.jsonContent, jsonDecode(payload));
+
+    final encrypted = (await (JsonWebEncryptionBuilder()
+              ..encryptionAlgorithm = 'A256GCM'
+              ..jsonContent = {'test': 'test'}
+              ..mediaType = 'NJWT'
+              ..setProtectedHeader(
+                  'exp', DateTime.now().millisecondsSinceEpoch * 1000)
+              ..addRecipient(publicKey,
+                  algorithm: 'ECDH-ES')) //, algorithm: 'BP256R1'))
+            .build())
+        .toCompactSerialization();
+
+    print("PRIVATE: $privateKey");
+    print("JWE TEST: $encrypted");
+
+    final payload2 = await JsonWebEncryption.fromCompactSerialization(encrypted)
+        .getPayload(store);
+    print("payload ${payload2.jsonContent}");
+  });
+  test('ECDH-ES decrypt', () async {
+    final privateKey = JsonWebKey.fromJson({
+      "kty": "EC",
+      "crv": "P-521",
+      "x":
+          "AAWroELkQkM5EkOOp120RcaeJqx2o5xLlU9GAh4XrjUMzKe8u6VTS99AAUgbTUouRAbMmpfA1B7GCCFwJmouexNR",
+      "y":
+          "AXg4ZO6W6AYx-B_CTS_HlIId4aLuAZATtNG6ythg8FxwOWbtmzP86bAbvigQ_GSbGskoodEkkFlFf7OZ0n1g9VPc",
+      "d":
+          "AAWSN5q-Ia3ZSui169xWf1xxSXrdv4gykULJrQHc4_jDIyA8g9yrpWecKYNqBuZ-KEtU-MEzIgqYPokFkmh-29cy"
+    });
+    final publicKey = JsonWebKey.fromJson({
+      "kty": "EC",
+      "crv": "P-521",
+      "x":
+          "ADZCtxnACZDwAqMAL7c7VO6d5fc2GsI7_pn7neATT59NI3Sno42_kDRhtE3x4vRwurKR3Kg_Xnz3LYxdUhHwGULL",
+      "y":
+          "AJxDBBrRhCTSMjthoTtq3hAgru2RCzrvZYkkLQg2aRlaIGPAZa2baE9UYbbEQs2BdDfs1dBoCwjZA65mIppbIm1L",
+      "d":
+          "ATFPB85Gr75k-Tr4wdwkoV8X2RyzVOw2IdVICKg8eidc4Sl0VqUKwKSBkVIn4Dd1soIN2_aPzYIQfI_n4Snp5IWk"
+    });
+
+    final secret = JsonWebKey.generateECDH('A256GCM',
+        publicKey: publicKey, privateKey: privateKey);
+
+    print("payload $secret");
+
+    // should be: 86c7d0c862e836a999b537df8542ab91d5788514669edc9de916dd3f77d52a71ce9fa5e476205ee167a757523cc2c6813a9e4730e3b3b0c1588ff720425b3f6a4a
   });
 }
 
@@ -335,7 +451,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded) {
       }
     }
 
-    jwe = builder.build();
+    jwe = await builder.build();
 
     if (encoded is String) jwe.toCompactSerialization();
     await expectPayload(jwe);

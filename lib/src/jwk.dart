@@ -2,6 +2,7 @@
 library;
 
 import 'dart:async';
+import 'dart:math';
 import 'dart:async' as async show runZoned;
 import 'dart:convert';
 import 'dart:convert' as convert;
@@ -15,6 +16,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:jose/src/jwa.dart';
 import 'package:meta/meta.dart';
 import 'package:x509/x509.dart' as x509;
+import 'package:pointycastle/pointycastle.dart' as ecdh;
+import 'package:pointycastle/digests/sha256.dart' as ecdh;
 
 import 'jose.dart';
 import 'util.dart';
@@ -199,6 +202,66 @@ class JsonWebKey extends JsonObject {
     return alg.generateRandomKey(keyBitLength: keyBitLength);
   }
 
+  /// Generates a random key suitable for the specified [algorithm] using ECDH
+  factory JsonWebKey.generateECDH(String algorithm,
+      {required JsonWebKey publicKey, required JsonWebKey privateKey}) {
+    var alg = JsonWebAlgorithm.getByName(algorithm);
+
+    final privKey = privateKey._keyPair.privateKey! as EcPrivateKey;
+    final pubKey = publicKey._keyPair.publicKey! as EcPublicKey;
+    final curve = privateKey._keyPair.curveParameters()!;
+
+    final sharedSecret = (ecdh.ECDHBasicAgreement()
+          ..init(ecdh.ECPrivateKey(privKey.eccPrivateKey, curve)))
+        .calculateAgreement(ecdh.ECPublicKey(
+            curve.curve.createPoint(pubKey.xCoordinate, pubKey.yCoordinate),
+            curve));
+
+    final sharedSecretBytes =
+        (ecdh.ASN1Integer(sharedSecret)..encode()).valueBytes!;
+
+    // concat KDF, basically the string "counter+secret+algorithm+apu+apv+keylength" hashed repeatedly while incrementing the counter and use that as the key.
+    final keyBits = alg.minKeyBitLength ?? 256;
+    final keyBytes = keyBits ~/ 8;
+    final iterations = max(keyBits ~/ 256, 1);
+
+    final key = Uint8List(keyBytes);
+
+    final algorithmBytes = utf8.encode(algorithm);
+    final algorithmSize = Uint8List(4)
+      ..buffer.asByteData().setInt32(0, algorithmBytes.length, Endian.big);
+    final keySize = Uint8List(4)
+      ..buffer.asByteData().setInt32(0, keyBits, Endian.big);
+
+    // algorithm encoded and keylength encoded (0x0100 == 256 for example). apu and apv currently hardcoded to 0.
+    final value = Uint8List.fromList([
+      ...algorithmSize,
+      ...algorithmBytes,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      ...keySize,
+    ]);
+
+    for (var i = 1; i <= iterations; i++) {
+      final counter = Uint8List(4)
+        ..buffer.asByteData().setInt32(0, i, Endian.big);
+      final buf =
+          Uint8List.fromList([...counter, ...sharedSecretBytes, ...value]);
+
+      key.setRange(
+          (i - 1) * 32, i * 32, ecdh.SHA256Digest().process(buf).take(32));
+    }
+
+    return alg
+        .jwkFromCryptoKeyPair(KeyPair.symmetric(SymmetricKey(keyValue: key)));
+  }
+
   KeyPair get cryptoKeyPair => _keyPair;
 
   /// The cryptographic algorithm family used with the key, such as `RSA` or
@@ -266,11 +329,11 @@ class JsonWebKey extends JsonObject {
   String? get x509CertificateSha256Thumbprint => this['x5t#S256'];
 
   /// Compute digital signature or MAC
-  List<int> sign(List<int> data, {String? algorithm}) {
+  Future<List<int>> sign(List<int> data, {String? algorithm}) {
     _assertCanDo('sign');
     var signer = _keyPair.privateKey!.createSigner(_getAlgorithm(algorithm));
     var signature = signer.sign(data);
-    return signature.data;
+    return Future.value(signature.data);
   }
 
   /// Verify digital signature or MAC
@@ -484,6 +547,11 @@ class JsonWebKeyStore {
 
     if ((header.keyId != null) && (header.keyId != key.keyId)) {
       return false;
+    }
+
+    if (header.algorithm == 'ECDH-ES' &&
+        (operation == 'encrypt' || operation == 'decrypt')) {
+      return key.keyType == 'EC';
     }
 
     return key.usableForAlgorithm(

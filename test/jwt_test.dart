@@ -172,7 +172,10 @@ void main() {
         'sub': 'user-2',
         'iss': 'https://trusted-issuer.example.com',
         'aud': 'my-application',
-        'exp': DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000,
+        'exp': DateTime.now()
+                .add(const Duration(hours: 1))
+                .millisecondsSinceEpoch ~/
+            1000,
         'iat': DateTime.now().millisecondsSinceEpoch ~/ 1000,
       });
       final builder = JsonWebSignatureBuilder()
@@ -184,7 +187,8 @@ void main() {
             JsonWebKey.fromCryptoKeys(
                     publicKey: alternateKey.cryptoKeyPair.publicKey)
                 .toJson());
-      final jwtCompact = builder.build().toCompactSerialization();
+      final jwt = await builder.build();
+      final jwtCompact = jwt.toCompactSerialization();
 
       expect(
         () => JsonWebToken.decodeAndVerify(jwtCompact, keyStore),

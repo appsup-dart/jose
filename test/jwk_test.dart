@@ -285,6 +285,29 @@ void main() {
       expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.p256);
       expect(key.cryptoKeyPair.privateKey, isNull);
     });
+
+    test('JWK from pem PRIVATE EC KEY with BP256R1 curve', () {
+      var key = JsonWebKey.fromPem(
+        File('test/pem/bp256r1.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'EC');
+      expect(key.cryptoKeyPair.publicKey, isA<EcPublicKey>());
+      expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.bp256r1);
+      expect(key.cryptoKeyPair.privateKey, isA<EcPrivateKey>());
+      expect((key.cryptoKeyPair.privateKey as EcKey).curve, curves.bp256r1);
+    });
+    test('JWK from pem PUBLIC KEY with EC BP256R1 curve', () {
+      var key = JsonWebKey.fromPem(
+        File('test/pem/bp256r1.pub.key').readAsStringSync(),
+      );
+
+      expect(key.keyType, 'EC');
+      expect(key.cryptoKeyPair.publicKey, isA<EcPublicKey>());
+      expect((key.cryptoKeyPair.publicKey as EcKey).curve, curves.bp256r1);
+      expect(key.cryptoKeyPair.privateKey, isNull);
+    });
+
     test('JWK from pem PRIVATE EC KEY with P-256K curve', () {
       var key = JsonWebKey.fromPem(
         File('test/pem/ec256k.key').readAsStringSync(),

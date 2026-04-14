@@ -72,7 +72,7 @@ Future<void> example2() async {
       algorithm: 'HS256');
 
   // build the jws
-  var jws = builder.build();
+  var jws = await builder.build();
 
   // output the compact serialization
   print('jws compact serialization: ${jws.toCompactSerialization()}');
@@ -189,7 +189,7 @@ Future<void> example4() async {
   builder.encryptionAlgorithm = 'A128CBC-HS256';
 
   // build the jws
-  var jwe = builder.build();
+  var jwe = await builder.build();
 
   // output the compact serialization
   print('jwe compact serialization: ${jwe.toCompactSerialization()}');
@@ -257,7 +257,7 @@ Future<void> example6() async {
       algorithm: 'HS256');
 
   // build the jws
-  var jws = builder.build();
+  var jws = await builder.build();
 
   // output the compact serialization
   print('jwt compact serialization: ${jws.toCompactSerialization()}');
@@ -289,7 +289,7 @@ Future<void> example7() async {
   builder.addRecipient(key, algorithm: 'RS512');
 
   // build the jws
-  var jws = builder.build();
+  var jws = await builder.build();
 
   // output the compact serialization
   print('jwt compact serialization: ${jws.toCompactSerialization()}');
@@ -304,7 +304,7 @@ Future<void> example8() async {
 
   final hash = utf8.encode('TEST');
 
-  var sig = key.sign(hash);
+  var sig = await key.sign(hash);
   final valid = key.verify(hash, sig);
 
   print('valid? $valid');
@@ -411,7 +411,7 @@ Future<void> example10() async {
   builder.compressionAlgorithm = 'DEF';
 
   // build the jws
-  var jwe = builder.build();
+  var jwe = await builder.build();
 
   // output the compact serialization
   print('jwe compact serialization: ${jwe.toCompactSerialization()}');

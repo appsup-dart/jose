@@ -111,9 +111,9 @@ class _JwsRecipient extends JoseRecipient {
                 ? const []
                 : decodeBase64EncodedBytes(json['signature']));
 
-  factory _JwsRecipient._sign(
+  static Future<_JwsRecipient> _sign(
       List<int> payload, JsonObject protectedHeader, JsonWebKey? key,
-      {String? algorithm, bool protectAll = false}) {
+      {String? algorithm, bool protectAll = false}) async {
     // Compute the encoded payload value BASE64URL(JWS Payload)
     var encodedPayload = encodeBase64EncodedBytes(payload);
 
@@ -150,7 +150,7 @@ class _JwsRecipient extends JoseRecipient {
 
     var signature = algorithm == 'none'
         ? const <int>[]
-        : key!.sign(data, algorithm: algorithm);
+        : await key!.sign(data, algorithm: algorithm);
 
     return _JwsRecipient(
         protectedHeader: protectedHeader,
@@ -172,7 +172,7 @@ class _JwsRecipient extends JoseRecipient {
 /// Builder for [JsonWebSignature]
 class JsonWebSignatureBuilder extends JoseObjectBuilder<JsonWebSignature> {
   @override
-  JsonWebSignature build() {
+  Future<JsonWebSignature> build() async {
     if (recipients.isEmpty) {
       throw StateError('Need at least one recipient');
     }
@@ -181,12 +181,13 @@ class JsonWebSignatureBuilder extends JoseObjectBuilder<JsonWebSignature> {
       throw StateError('No payload set');
     }
 
-    var signatures = recipients.map((r) {
+    var signatures = (await Future.wait(recipients.map((r) {
       var key = r['_jwk'];
       var algorithm = r['alg'];
       return _JwsRecipient._sign(payload.data, payload.protectedHeader!, key,
           algorithm: algorithm, protectAll: recipients.length == 1);
-    }).toList();
+    })))
+        .toList();
 
     return JsonWebSignature._(payload.data, signatures);
   }

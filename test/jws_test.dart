@@ -204,7 +204,7 @@ void main() {
       var builder = JsonWebSignatureBuilder()..content = payload;
 
       builder.addRecipient(null, algorithm: 'none');
-      var jws = builder.build();
+      var jws = await builder.build();
 
       var keyStore = JsonWebKeyStore();
       jws = JsonWebSignature.fromCompactSerialization(
@@ -299,7 +299,7 @@ void _doTests(dynamic payload, dynamic key, dynamic encoded,
       }
     }
 
-    var jws = builder.build();
+    var jws = await builder.build();
 
     if (encoded is String) jws.toCompactSerialization();
     await expectPayload(jws, allowedAlgorithms: allowedAlgorithms);

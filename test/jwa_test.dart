@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('JWA', () {
-    test('Generating keys', () {
+    test('Generating keys', () async {
       var data = utf8.encode('hello world');
 
       for (var a in JsonWebAlgorithm.allAlgorithms) {
@@ -26,7 +26,7 @@ void main() {
         switch (a.use) {
           case 'sig':
             expect(key.keyOperations, {'sign', 'verify'});
-            var signature = key.sign(data);
+            var signature = await key.sign(data);
             expect(key.verify(data, signature), isTrue);
             break;
           case 'enc':

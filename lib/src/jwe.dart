@@ -8,6 +8,7 @@ import 'package:archive/archive.dart';
 
 import 'jose.dart';
 import 'jwk.dart';
+import 'jwa.dart';
 import 'util.dart';
 
 /// JSON Web Encryption (JWE) represents encrypted content using JSON-based data
@@ -147,15 +148,19 @@ class JsonWebEncryption extends JoseObject {
     if (header.encryptionAlgorithm == 'none') {
       throw JoseException('Encryption algorithm cannot be `none`');
     }
-    var cek = header.algorithm == 'dir'
+    final cek = header.algorithm == 'dir'
         ? key
-        : key.unwrapKey(recipient.data, algorithm: header.algorithm);
+        : (header.algorithm == 'ECDH-ES'
+            ? JsonWebKey.generateECDH(header.encryptionAlgorithm!,
+                publicKey: JsonWebKey.fromJson(header['epk']), privateKey: key)
+            : key.unwrapKey(recipient.data, algorithm: header.algorithm));
 
     var uncompressed = cek.decrypt(data,
         initializationVector: initializationVector,
         additionalAuthenticatedData: Uint8List.fromList(aad.codeUnits),
         authenticationTag: authenticationTag,
         algorithm: header.encryptionAlgorithm);
+
     switch (header.compressionAlgorithm) {
       case null:
         return uncompressed;
@@ -195,7 +200,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
   String? compressionAlgorithm;
 
   @override
-  JsonWebEncryption build() {
+  Future<JsonWebEncryption> build() {
     if (encryptionAlgorithm == null) {
       throw StateError('No encryption algorithm set');
     }
@@ -221,6 +226,7 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
     var recipientsMapped = recipients.map((r) {
       var key = r['_jwk'] as JsonWebKey;
       var algorithm = r['alg'] ?? key.algorithmForOperation('wrapKey') ?? 'dir';
+      var unprotectedHeaderParams = <String, dynamic>{'alg': algorithm};
       if (algorithm == 'dir') {
         if (recipients.length > 1) {
           throw StateError(
@@ -228,15 +234,35 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
         }
         cek =
             JsonWebKey.fromJson({'alg': encryptionAlgorithm, ...key.toJson()});
+      } else if (algorithm == 'ECDH-ES') {
+        if (recipients.length != 1) {
+          throw StateError(
+              'JWE can only have one recipient when using ECDH-ES encryption.');
+        }
+
+        if (!RegExp('^A[0-9][0-9][0-9]GCM\$').hasMatch(encryptionAlgorithm!)) {
+          throw StateError(
+              'Currently only AESGCM is supported as an encryption algortihm for ECDH-ES.');
+        }
+
+        final ephemeralKey = JsonWebAlgorithm('Something',
+                type: 'EC', curve: key['crv'], use: 'enc')
+            .generateRandomKey();
+        cek = JsonWebKey.generateECDH(encryptionAlgorithm!,
+            publicKey: key, privateKey: ephemeralKey);
+        unprotectedHeaderParams['epk'] = JsonWebKey.fromCryptoKeys(
+                publicKey: ephemeralKey.cryptoKeyPair.publicKey)
+            .toJson();
+
+        //JsonWebKey.fromJson({'alg': encryptionAlgorithm, ...key.toJson()});
       }
-      var encryptedKey = algorithm == 'dir'
+      var encryptedKey = (algorithm == 'dir' || algorithm == 'ECDH-ES')
           ? const <int>[]
           : key.wrapKey(
               cek,
               algorithm: algorithm,
             );
 
-      var unprotectedHeaderParams = <String, dynamic>{'alg': algorithm};
       if (key.keyId != null) {
         unprotectedHeaderParams['kid'] = key.keyId;
       }
@@ -282,12 +308,13 @@ class JsonWebEncryptionBuilder extends JoseObjectBuilder<JsonWebEncryption> {
     var encryptedData = cek.encrypt(data,
         initializationVector: iv,
         additionalAuthenticatedData: Uint8List.fromList(aad.codeUnits));
-    return JsonWebEncryption._(encryptedData.data, recipientsMapped,
+    return Future.value(JsonWebEncryption._(
+        encryptedData.data, recipientsMapped,
         protectedHeader: protectedHeader,
         unprotectedHeader:
             compact ? null : JsonObject.from(sharedUnprotectedHeaderParams),
         initializationVector: encryptedData.initializationVector!,
         authenticationTag: encryptedData.authenticationTag!,
-        additionalAuthenticatedData: additionalAuthenticatedData);
+        additionalAuthenticatedData: additionalAuthenticatedData));
   }
 }

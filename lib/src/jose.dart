@@ -217,7 +217,7 @@ abstract class JoseObject {
         header,
         this is JsonWebSignature
             ? 'verify'
-            : header.algorithm == 'dir'
+            : (header.algorithm == 'dir' || header.algorithm == 'ECDH-ES')
                 ? 'decrypt'
                 : 'unwrapKey',
       )) {
@@ -388,7 +388,7 @@ abstract class JoseObjectBuilder<T extends JoseObject> {
   }
 
   /// Build the [JsonWebSignature] or [JsonWebEncryption]
-  T build();
+  Future<T> build();
 }
 
 class JoseException implements Exception {
